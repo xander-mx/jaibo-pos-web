@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { environment } from '../environments/environment';
 
 import { AuthService } from '@core/auth/auth.service';
 import { TerminalService } from '@core/config/terminal.service';
@@ -16,6 +17,7 @@ export class App implements OnInit {
   protected readonly title = signal('jaibo-pos-web');
 
   protected readonly menuOpen = signal(false);
+  readonly environment = environment;
 
   constructor(
     protected readonly authService: AuthService,

@@ -485,3 +485,15 @@
       var(--border);
   }
 }
+
+.app-version {
+  display: block;
+
+  margin-top: 0.1rem;
+
+  color: var(--text-muted);
+
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1;
+}
