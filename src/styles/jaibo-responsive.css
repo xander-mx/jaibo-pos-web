@@ -1,0 +1,23 @@
+@media (max-width: 700px) {
+
+  :root {
+    --control-height: 48px;
+  }
+
+  body {
+    font-size: 15px;
+  }
+
+  .page {
+    padding: 12px;
+  }
+
+  .page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .btn {
+    min-height: 48px;
+  }
+}

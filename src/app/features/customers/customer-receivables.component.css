@@ -1,0 +1,158 @@
+.receivables-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: Arial, sans-serif;
+}
+
+.receivables-page header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.receivables-page header button {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+}
+
+.receivables-page h1 {
+  margin: 0 0 4px;
+  font-size: 28px;
+}
+
+.receivables-page header strong {
+  font-size: 18px;
+}
+
+.receivables-page section > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 18px 20px;
+  margin-bottom: 20px;
+
+  border-radius: 12px;
+  background: #f4f4f4;
+}
+
+.receivables-page section > div:first-child span {
+  font-size: 16px;
+}
+
+.receivables-page section > div:first-child strong {
+  font-size: 26px;
+}
+
+.receivables-page article {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 16px;
+
+  padding: 18px;
+  margin-bottom: 12px;
+
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+}
+
+.receivables-page article > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.receivables-page article span {
+  color: #666;
+  font-size: 14px;
+}
+
+.receivables-page article strong {
+  font-size: 16px;
+}
+
+.receivables-page article > div:last-child strong {
+  font-size: 20px;
+}
+
+.input-error {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fbeaea;
+}
+
+@media (max-width: 700px) {
+  .receivables-page {
+    padding: 16px;
+  }
+
+  .receivables-page article {
+    grid-template-columns: 1fr;
+  }
+
+  .receivables-page section > div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
+.primary-button {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.payment-panel {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+}
+
+.payment-panel h2 {
+  margin-top: 0;
+}
+
+.payment-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.payment-panel input,
+.payment-panel select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.change-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-top: 14px;
+  padding: 12px;
+
+  border-radius: 8px;
+  background: #f4f4f4;
+}
+
+.change-row strong {
+  font-size: 18px;
+}

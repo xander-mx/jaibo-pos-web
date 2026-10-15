@@ -1,0 +1,180 @@
+<section class="payment-panel">
+
+  <h2>Cerrar a crédito</h2>
+
+  <div>
+    <span>Total</span>
+
+    <strong>
+      {{ total() | currency:'MXN' }}
+    </strong>
+  </div>
+
+  <div>
+    <span>Pago inicial</span>
+
+    <strong>
+      {{ paidAmount() | currency:'MXN' }}
+    </strong>
+  </div>
+
+  <div>
+    <span>Quedará a crédito</span>
+
+    <strong>
+      {{ remaining() | currency:'MXN' }}
+    </strong>
+  </div>
+
+  @if (remaining() > 0) {
+
+    <label>
+      Método
+
+      <select
+        [ngModel]="paymentMethod()"
+        (ngModelChange)="paymentMethod.set($event)"
+      >
+        <option value="CASH">
+          Efectivo
+        </option>
+
+        <option value="TRANSFER">
+          Transferencia
+        </option>
+
+        <option value="CARD">
+          Tarjeta
+        </option>
+      </select>
+    </label>
+
+    @if (paymentMethod() === 'CASH') {
+
+      <label>
+        Importe a aplicar
+
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [max]="remaining()"
+          [ngModel]="amount()"
+          (ngModelChange)="amount.set($event)"
+        >
+      </label>
+
+      <label>
+        Efectivo recibido
+
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [ngModel]="cashReceived()"
+          (ngModelChange)="cashReceived.set($event)"
+        >
+      </label>
+
+      @if (
+        amount() !== null &&
+        cashReceived() !== null
+        ) {
+
+        <div>
+          Cambio:
+
+          <strong>
+            {{ change() | currency:'MXN' }}
+          </strong>
+        </div>
+
+      }
+
+    } @else {
+
+      <label>
+        Importe
+
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [max]="remaining()"
+          [ngModel]="amount()"
+          (ngModelChange)="amount.set($event)"
+        >
+      </label>
+
+    }
+
+    <button
+      type="button"
+      (click)="addPayment()"
+    >
+      Agregar pago inicial
+    </button>
+
+  }
+
+  @for (
+    payment of payments();
+    track $index;
+    let index = $index
+    ) {
+
+    <div class="payment-row">
+
+      <span>
+        {{ payment.paymentMethod }}
+      </span>
+
+      <strong>
+        {{ payment.amount | currency:'MXN' }}
+      </strong>
+
+      <button
+        type="button"
+        (click)="removePayment(index)"
+      >
+        Quitar
+      </button>
+
+    </div>
+
+  }
+
+  @if (error()) {
+    <p class="input-error">
+      {{ error() }}
+    </p>
+  }
+
+  <div class="payment-actions">
+
+    <button
+      type="button"
+      class="primary-button"
+      (click)="confirm()"
+      [disabled]="loading()"
+    >
+      {{
+        loading()
+          ? 'Cerrando...'
+          : remaining() === 0
+            ? 'Confirmar pago'
+            : 'Confirmar crédito'
+      }}
+    </button>
+
+    <button
+      type="button"
+      (click)="cancel()"
+      [disabled]="loading()"
+    >
+      Cancelar
+    </button>
+
+  </div>
+
+</section>

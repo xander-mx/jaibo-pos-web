@@ -1,0 +1,186 @@
+<main class="sales-page">
+
+  <header class="sales-heading">
+    <div>
+      <div class="sales-title-row">
+        <h1>Cuentas abiertas</h1>
+
+        @if (!loading()) {
+          <span class="accounts-count">
+            {{ sales().length }}
+          </span>
+        }
+      </div>
+
+      <p>
+        Selecciona una cuenta para continuar con el pedido.
+      </p>
+    </div>
+
+    @if (!showNewSale()) {
+      <button
+        type="button"
+        class="btn btn-primary new-account-button"
+        (click)="startNewSale()"
+        [disabled]="openingSale()"
+      >
+        <span class="plus-icon">+</span>
+        Nueva cuenta
+      </button>
+    }
+  </header>
+
+  @if (showNewSale()) {
+    <section class="new-sale-panel">
+
+      <div class="new-sale-heading">
+        <div>
+          <h2>Nueva cuenta</h2>
+          <p>
+            Puedes agregar una referencia para identificarla rápidamente.
+          </p>
+        </div>
+      </div>
+
+      <label class="new-sale-field">
+        <span>Referencia opcional</span>
+
+        <input
+          type="text"
+          maxlength="80"
+          placeholder="Ej. Mesa 3, Juan, Para llevar"
+          [ngModel]="newSaleReference()"
+          (ngModelChange)="newSaleReference.set($event)"
+          [disabled]="openingSale()"
+        />
+      </label>
+
+      @if (openSaleError()) {
+        <p class="state-error">
+          {{ openSaleError() }}
+        </p>
+      }
+
+      <div class="new-sale-actions">
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="newSale()"
+          [disabled]="openingSale()"
+        >
+          {{
+            openingSale()
+              ? 'Creando...'
+              : 'Crear cuenta'
+          }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="cancelNewSale()"
+          [disabled]="openingSale()"
+        >
+          Cancelar
+        </button>
+      </div>
+
+    </section>
+  }
+
+  @if (loading()) {
+    <section class="state-card">
+      Cargando cuentas...
+    </section>
+  }
+
+  @if (error()) {
+    <section class="state-card state-error">
+      {{ error() }}
+    </section>
+  }
+
+  @if (!loading() && !error() && sales().length === 0) {
+    <section class="empty-sales">
+
+      <div class="empty-icon">
+        +
+      </div>
+
+      <h2>No hay cuentas abiertas</h2>
+
+      <p>
+        Crea una cuenta para comenzar una nueva venta.
+      </p>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="startNewSale()"
+      >
+        Crear primera cuenta
+      </button>
+
+    </section>
+  }
+
+  @if (!loading() && sales().length > 0) {
+    <section class="accounts-grid">
+
+      @for (sale of sales(); track sale.id) {
+
+        <article
+          class="account-card"
+          [routerLink]="['/sales', sale.id]"
+        >
+
+          <div class="account-card-header">
+
+            <div>
+              <span class="account-label">
+                CUENTA
+              </span>
+
+              <h2>
+                #{{ sale.saleNumber }}
+              </h2>
+            </div>
+
+            <span class="status-badge">
+              Abierta
+            </span>
+
+          </div>
+
+          <div class="account-reference">
+
+            @if (sale.reference) {
+              <strong>
+                {{ sale.reference }}
+              </strong>
+            } @else {
+              <span>
+                Sin referencia
+              </span>
+            }
+
+          </div>
+
+          <footer class="account-footer">
+
+            <span>Total</span>
+
+            <strong>
+              {{ sale.total | currency:'MXN' }}
+            </strong>
+
+          </footer>
+
+        </article>
+
+      }
+
+    </section>
+  }
+
+</main>

@@ -1,0 +1,398 @@
+<main class="inventory-page">
+
+  <header class="inventory-header">
+
+    <div>
+      <h1>Inventario</h1>
+      <p>
+        Consulta existencias y registra ajustes o mermas.
+      </p>
+    </div>
+  </header>
+
+
+  @if (loading()) {
+
+    <section class="state-card">
+      Cargando inventario...
+    </section>
+
+  }
+
+
+  @if (error()) {
+
+    <section class="state-card state-error">
+      {{ error() }}
+    </section>
+
+  }
+
+
+  @if (!loading() && !error() && items().length === 0) {
+
+    <section class="empty-state">
+
+      <div class="empty-icon">
+        📦
+      </div>
+
+      <h2>
+        Sin productos controlados
+      </h2>
+
+      <p>
+        No hay productos con control de inventario.
+      </p>
+
+    </section>
+
+  }
+
+
+  @if (!loading() && !error() && items().length > 0) {
+
+    <section class="inventory-grid">
+
+      @for (
+        item of items();
+        track item.productId
+        ) {
+
+        <article
+          class="inventory-card"
+          [class.inventory-card-editing]="
+            editingProductId() === item.productId ||
+            wastingProductId() === item.productId
+          "
+        >
+
+          <header class="product-header">
+
+            <div>
+              <span class="eyebrow">
+                PRODUCTO
+              </span>
+
+              <h2>
+                {{ item.productName }}
+              </h2>
+            </div>
+
+            <span class="inventory-mode">
+              {{
+                item.inventoryMode === 'DIRECT'
+                  ? 'Control directo'
+                  : item.inventoryMode
+              }}
+            </span>
+
+          </header>
+
+
+          <div class="stock-panel">
+
+            <span class="stock-label">
+              Existencia actual
+            </span>
+
+            <div class="stock-value">
+
+              <strong>
+                {{ item.quantity }}
+              </strong>
+
+              <span>
+                {{ item.unitSymbol }}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          @if (
+            editingProductId() !== item.productId &&
+            wastingProductId() !== item.productId
+            ) {
+
+            <div class="inventory-actions">
+
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="startAdjustment(item)"
+              >
+                Ajustar existencia
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-secondary waste-button"
+                (click)="startWaste(item)"
+              >
+                Registrar merma
+              </button>
+
+            </div>
+
+          }
+
+
+          @if (wastingProductId() === item.productId) {
+
+            <section class="inventory-editor">
+
+              <div class="editor-header">
+
+                <div>
+                  <span class="eyebrow">
+                    MERMA
+                  </span>
+
+                  <h3>
+                    Registrar merma
+                  </h3>
+                </div>
+
+              </div>
+
+              <p class="editor-help">
+                Registra la cantidad de producto que ya no está disponible.
+              </p>
+
+
+              <div class="current-stock">
+
+                <span>
+                  Existencia actual
+                </span>
+
+                <strong>
+                  {{ item.quantity }}
+                  {{ item.unitSymbol }}
+                </strong>
+
+              </div>
+
+
+              <div class="editor-fields">
+
+                <label>
+                  <span>
+                    Cantidad perdida
+                  </span>
+
+                  <input
+                    type="number"
+                    min="0.001"
+                    step="0.001"
+                    inputmode="decimal"
+                    [ngModel]="wasteQuantity()"
+                    (ngModelChange)="wasteQuantity.set($event)"
+                    [disabled]="wasteLoading()"
+                    placeholder="0.000"
+                  >
+                </label>
+
+
+                <label>
+                  <span>
+                    Motivo
+                  </span>
+
+                  <input
+                    type="text"
+                    maxlength="255"
+                    [ngModel]="wasteReason()"
+                    (ngModelChange)="wasteReason.set($event)"
+                    [disabled]="wasteLoading()"
+                    placeholder="Ej. Producto dañado"
+                  >
+                </label>
+
+              </div>
+
+
+              @if (wasteError()) {
+
+                <p class="input-error">
+                  {{ wasteError() }}
+                </p>
+
+              }
+
+
+              <div class="editor-actions">
+
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="saveWaste(item)"
+                  [disabled]="wasteLoading()"
+                >
+                  {{
+                    wasteLoading()
+                      ? 'Registrando...'
+                      : 'Registrar merma'
+                  }}
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="cancelWaste()"
+                  [disabled]="wasteLoading()"
+                >
+                  Cancelar
+                </button>
+
+              </div>
+
+            </section>
+
+          }
+
+
+          @if (editingProductId() === item.productId) {
+
+            <section class="inventory-editor">
+
+              <div class="editor-header">
+
+                <div>
+                  <span class="eyebrow">
+                    AJUSTE
+                  </span>
+
+                  <h3>
+                    Ajustar existencia
+                  </h3>
+                </div>
+
+              </div>
+
+              <p class="editor-help">
+                Captura la existencia real del producto.
+              </p>
+
+
+              <div class="current-stock">
+
+                <span>
+                  Existencia registrada
+                </span>
+
+                <strong>
+                  {{ item.quantity }}
+                  {{ item.unitSymbol }}
+                </strong>
+
+              </div>
+
+
+              <div class="editor-fields">
+
+                <label>
+                  <span>
+                    Nueva existencia
+                  </span>
+
+                  <input
+                    type="number"
+                    step="0.001"
+                    inputmode="decimal"
+                    [ngModel]="adjustmentQuantity()"
+                    (ngModelChange)="adjustmentQuantity.set($event)"
+                    [disabled]="adjustmentLoading()"
+                  >
+                </label>
+
+                @if (adjustmentQuantity() !== null) {
+
+                  <div
+                    class="adjustment-difference"
+                    [class.negative]="adjustmentDifference(item) < 0"
+                    [class.positive]="adjustmentDifference(item) > 0"
+                  >
+                    <span>Diferencia</span>
+
+                    <strong>
+                      @if (adjustmentDifference(item) > 0) {
+                        +
+                      }
+
+                      {{ adjustmentDifference(item) }}
+                      {{ item.unitSymbol }}
+                    </strong>
+                  </div>
+
+                }
+
+
+                <label>
+                  <span>
+                    Motivo
+                  </span>
+
+                  <input
+                    type="text"
+                    maxlength="255"
+                    [ngModel]="adjustmentReason()"
+                    (ngModelChange)="adjustmentReason.set($event)"
+                    [disabled]="adjustmentLoading()"
+                    placeholder="Ej. Conteo físico"
+                  >
+                </label>
+
+              </div>
+
+
+              @if (adjustmentError()) {
+
+                <p class="input-error">
+                  {{ adjustmentError() }}
+                </p>
+
+              }
+
+
+              <div class="editor-actions">
+
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="saveAdjustment(item)"
+                  [disabled]="!canSaveAdjustment(item)"
+                >
+                  {{
+                    adjustmentLoading()
+                      ? 'Guardando...'
+                      : 'Guardar ajuste'
+                  }}
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="cancelAdjustment()"
+                  [disabled]="adjustmentLoading()"
+                >
+                  Cancelar
+                </button>
+
+              </div>
+
+            </section>
+
+          }
+
+        </article>
+
+      }
+
+    </section>
+
+  }
+
+</main>

@@ -1,1 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
+@import './styles/jaibo-theme.css';
+@import './styles/jaibo-components.css';
+@import './styles/jaibo-layout.css';
+@import './styles/jaibo-responsive.css';

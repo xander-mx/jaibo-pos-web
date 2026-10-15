@@ -1,0 +1,487 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+
+/* ========================================
+   HEADER
+   ======================================== */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  width: 100%;
+
+  background: var(--surface);
+
+  border-bottom:
+    1px solid var(--border);
+
+  box-shadow:
+    var(--shadow-sm);
+}
+
+.app-header-inner {
+  min-height: 68px;
+
+  display: flex;
+  align-items: center;
+
+  gap: var(--space-5);
+
+  padding:
+    0 var(--space-5);
+
+  margin:
+    0 auto;
+}
+
+
+/* ========================================
+   BRAND
+   ======================================== */
+
+.brand {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  color:
+    var(--text-primary);
+
+  text-decoration:
+    none;
+
+  flex-shrink: 0;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius:
+    12px;
+
+  background:
+    var(--jaibo-primary);
+
+  color:
+    #ffffff;
+
+  font-size:
+    15px;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -0.4px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+
+  line-height:
+    1.1;
+}
+
+.brand-text strong {
+  font-size:
+    17px;
+
+  letter-spacing:
+    0.02em;
+}
+
+.brand-text span {
+  margin-top:
+    3px;
+
+  color:
+    var(--jaibo-secondary);
+
+  font-size:
+    11px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.06em;
+
+  text-transform:
+    uppercase;
+}
+
+
+/* ========================================
+   NAVIGATION
+   ======================================== */
+
+.main-nav {
+  display: flex;
+  align-items: stretch;
+
+  align-self: stretch;
+
+  gap: 2px;
+
+  margin-left:
+    auto;
+}
+
+.main-nav > a {
+  position:
+    relative;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  padding:
+    0 13px;
+
+  color:
+    var(--text-secondary);
+
+  text-decoration:
+    none;
+
+  font-size:
+    14px;
+
+  font-weight:
+    600;
+
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.main-nav > a:hover {
+  color:
+    var(--text-primary);
+
+  background:
+    var(--surface-soft);
+}
+
+.main-nav > a.active {
+  color: var(--jaibo-orange-text);
+}
+
+.main-nav > a.active::after {
+  content: '';
+
+  border-bottom-color: var(--jaibo-orange);
+
+  position:
+    absolute;
+
+  left:
+    12px;
+
+  right:
+    12px;
+
+  bottom:
+    0;
+
+  height:
+    3px;
+
+  border-radius:
+    3px 3px 0 0;
+
+  background:
+    var(--jaibo-primary);
+}
+
+
+/* ========================================
+   ACTIONS
+   ======================================== */
+
+.header-actions {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    8px;
+}
+
+.theme-toggle,
+.menu-button {
+  width:
+    42px;
+
+  height:
+    42px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  padding:
+    0;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    var(--radius-md);
+
+  background:
+    var(--surface);
+
+  color:
+    var(--text-primary);
+
+  cursor:
+    pointer;
+
+  font-size:
+    19px;
+}
+
+.theme-toggle:hover,
+.menu-button:hover {
+  background:
+    var(--surface-soft);
+}
+
+.logout-button {
+  min-height:
+    42px;
+
+  padding:
+    0 14px;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    var(--radius-md);
+
+  background:
+    var(--surface);
+
+  color:
+    var(--text-secondary);
+
+  font-weight:
+    600;
+
+  cursor:
+    pointer;
+}
+
+.logout-button:hover {
+  color:
+    var(--danger);
+
+  border-color:
+    var(--danger);
+}
+
+.menu-button {
+  display:
+    none;
+}
+
+.mobile-nav-actions {
+  display:
+    none;
+}
+
+
+/* ========================================
+   TABLET
+   ======================================== */
+
+@media (max-width: 1050px) {
+
+  .main-nav > a {
+    padding:
+      0 9px;
+
+    font-size:
+      13px;
+  }
+
+  .brand-text span {
+    display:
+      none;
+  }
+
+  .logout-button {
+    display:
+      none;
+  }
+}
+
+
+/* ========================================
+   MOBILE
+   ======================================== */
+
+@media (max-width: 760px) {
+
+  .app-header-inner {
+    min-height:
+      60px;
+
+    padding:
+      0 12px;
+  }
+
+  .brand-mark {
+    width:
+      38px;
+
+    height:
+      38px;
+
+    border-radius:
+      10px;
+  }
+
+  .brand-text strong {
+    font-size:
+      16px;
+  }
+
+  .brand-text span {
+    display:
+      block;
+
+    font-size:
+      9px;
+  }
+
+  .main-nav {
+    position:
+      absolute;
+
+    top:
+      60px;
+
+    left:
+      0;
+
+    right:
+      0;
+
+    display:
+      none;
+
+    flex-direction:
+      column;
+
+    gap:
+      0;
+
+    padding:
+      8px 12px
+      14px;
+
+    background:
+      var(--surface);
+
+    border-bottom:
+      1px solid
+      var(--border);
+
+    box-shadow:
+      var(--shadow-lg);
+  }
+
+  .main-nav.open {
+    display:
+      flex;
+  }
+
+  .main-nav > a {
+    min-height:
+      48px;
+
+    padding:
+      0 14px;
+
+    border-radius:
+      var(--radius-md);
+
+    font-size:
+      15px;
+  }
+
+  .main-nav > a.active::after {
+    display:
+      none;
+  }
+
+  .main-nav > a.active {
+    background:
+      var(--jaibo-primary-soft);
+
+    color:
+      var(--jaibo-primary);
+  }
+
+  .header-actions {
+    margin-left:
+      auto;
+  }
+
+  .menu-button {
+    display:
+      flex;
+  }
+
+  .theme-toggle {
+    display:
+      none;
+  }
+
+  .mobile-nav-actions {
+    display:
+      grid;
+
+    grid-template-columns:
+      1fr 1fr;
+
+    gap:
+      8px;
+
+    margin-top:
+      10px;
+
+    padding-top:
+      12px;
+
+    border-top:
+      1px solid
+      var(--border);
+  }
+}

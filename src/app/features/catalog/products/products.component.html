@@ -1,0 +1,1091 @@
+<main class="products-page">
+
+  <header class="page-header">
+
+    <div>
+      <h1>Catálogo</h1>
+      <p>
+        Administra productos, categorías y presentaciones.
+      </p>
+    </div>
+
+    <div class="header-actions">
+
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="openCreateCategory()"
+      >
+        + Nueva categoría
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="openCreateProduct()"
+      >
+        + Nuevo producto
+      </button>
+
+    </div>
+
+  </header>
+
+
+  @if (loading()) {
+
+    <section class="state-card">
+      Cargando catálogo...
+    </section>
+
+  } @else if (error()) {
+
+    <section class="state-card error">
+      {{ error() }}
+    </section>
+
+  } @else if (products().length === 0) {
+
+    <section class="empty-state">
+
+      <h2>No hay productos registrados</h2>
+
+      <p>
+        Crea tu primer producto para comenzar a venderlo o comprarlo.
+      </p>
+
+    </section>
+
+  } @else {
+
+    <section class="products-card">
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Inventario</th>
+            <th>Unidad</th>
+            <th>Venta</th>
+            <th>Compra</th>
+            <th>Acciones</th>
+          </tr>
+          </thead>
+
+          <tbody>
+
+            @for (
+              product of products();
+              track product.id
+              ) {
+
+              <tr>
+
+                <td>
+
+                  <div class="product-name">
+                    {{ product.name }}
+                  </div>
+
+                  @if (product.description) {
+                    <div class="product-description">
+                      {{ product.description }}
+                    </div>
+                  }
+
+                </td>
+
+                <td>
+                  {{ product.category.name }}
+                </td>
+
+                <td>
+                  <span class="inventory-badge">
+                    {{ inventoryModeLabel(product.inventoryMode) }}
+                  </span>
+                </td>
+
+                <td>
+                  {{
+                    product.inventoryUnit?.name || '—'
+                  }}
+                </td>
+
+                <td>
+                  <span
+                    class="boolean-badge"
+                    [class.yes]="product.sellable"
+                    [class.no]="!product.sellable"
+                  >
+                    {{
+                      product.sellable
+                        ? 'Sí'
+                        : 'No'
+                    }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="boolean-badge"
+                    [class.yes]="product.purchasable"
+                    [class.no]="!product.purchasable"
+                  >
+                    {{
+                      product.purchasable
+                        ? 'Sí'
+                        : 'No'
+                    }}
+                  </span>
+                </td>
+
+                <td class="actions-cell">
+
+                  @if (product.sellable) {
+
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      (click)="openPresentations(product)"
+                    >
+                      Presentaciones
+                    </button>
+
+                  }
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  }
+
+
+  <!-- NUEVO PRODUCTO -->
+
+  @if (showCreateProduct()) {
+
+    <div class="modal-backdrop">
+
+      <section class="product-modal">
+
+        <div class="modal-header">
+
+          <div>
+
+            <h2>
+              Nuevo producto
+            </h2>
+
+            <p>
+              Registra la información básica del producto.
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelCreateProduct()"
+            [disabled]="creatingProduct()"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <div class="modal-fields">
+
+          <label class="full-width">
+
+            <span>Nombre</span>
+
+            <input
+              type="text"
+              [ngModel]="name()"
+              (ngModelChange)="
+                name.set($event);
+                productError.set('')
+              "
+              [disabled]="creatingProduct()"
+              placeholder="Ej. Pata de mula"
+            >
+
+          </label>
+
+
+          <label class="full-width">
+
+            <span>Descripción (opcional)</span>
+
+            <textarea
+              rows="3"
+              [ngModel]="description()"
+              (ngModelChange)="description.set($event)"
+              [disabled]="creatingProduct()"
+              placeholder="Descripción breve del producto"
+            ></textarea>
+
+          </label>
+
+
+          <label>
+
+            <span>Categoría</span>
+
+            <select
+              [ngModel]="categoryId()"
+              (ngModelChange)="
+                categoryId.set($event);
+                productError.set('')
+              "
+              [disabled]="creatingProduct()"
+            >
+
+              @for (
+                category of categories();
+                track category.id
+                ) {
+
+                <option [value]="category.id">
+                  {{ category.name }}
+                </option>
+
+              }
+
+            </select>
+
+          </label>
+
+
+          <label>
+
+            <span>Control de inventario</span>
+
+            <select
+              [ngModel]="inventoryMode()"
+              (ngModelChange)="changeInventoryMode($event)"
+              [disabled]="creatingProduct()"
+            >
+              <option value="DIRECT">
+                Control directo
+              </option>
+
+              <option value="MANUAL_AT_CLOSE">
+                Ajuste manual al cierre
+              </option>
+
+              <option value="NOT_TRACKED">
+                Sin control de inventario
+              </option>
+            </select>
+
+          </label>
+
+
+          <label>
+
+            <span>Unidad de inventario</span>
+
+            <select
+              [ngModel]="inventoryUnitId()"
+              (ngModelChange)="
+                inventoryUnitId.set($event);
+                productError.set('')
+              "
+              [disabled]="
+                creatingProduct()
+                || inventoryMode() === 'NOT_TRACKED'
+              "
+            >
+
+              @for (
+                unit of units();
+                track unit.id
+                ) {
+
+                <option [ngValue]="unit.id">
+                  {{ unit.name }} ({{ unit.symbol }})
+                </option>
+
+              }
+
+            </select>
+
+          </label>
+
+
+          <label>
+
+            <span>Orden de visualización</span>
+
+            <input
+              type="number"
+              min="0"
+              step="1"
+              [ngModel]="displayOrder()"
+              (ngModelChange)="displayOrder.set($event)"
+              [disabled]="creatingProduct()"
+            >
+
+          </label>
+
+        </div>
+
+
+        <div class="switches">
+
+          <label class="check-option">
+
+            <input
+              type="checkbox"
+              [ngModel]="sellable()"
+              (ngModelChange)="sellable.set($event)"
+              [disabled]="creatingProduct()"
+            >
+
+            <span>
+              Disponible para venta
+            </span>
+
+          </label>
+
+
+          <label class="check-option">
+
+            <input
+              type="checkbox"
+              [ngModel]="purchasable()"
+              (ngModelChange)="purchasable.set($event)"
+              [disabled]="creatingProduct()"
+            >
+
+            <span>
+              Disponible para compra
+            </span>
+
+          </label>
+
+        </div>
+
+
+        @if (productError()) {
+
+          <p class="error">
+            {{ productError() }}
+          </p>
+
+        }
+
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelCreateProduct()"
+            [disabled]="creatingProduct()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="createProduct()"
+            [disabled]="
+              creatingProduct()
+              || !name().trim()
+              || !categoryId()
+              || (
+                inventoryMode() !== 'NOT_TRACKED'
+                && !inventoryUnitId()
+              )
+            "
+          >
+            {{
+              creatingProduct()
+                ? 'Guardando...'
+                : 'Guardar producto'
+            }}
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+
+  <!-- NUEVA CATEGORÍA -->
+
+  @if (showCreateCategory()) {
+
+    <div class="modal-backdrop">
+
+      <section class="category-modal">
+
+        <div class="modal-header">
+
+          <div>
+
+            <h2>
+              Nueva categoría
+            </h2>
+
+            <p>
+              Organiza los productos dentro del catálogo.
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelCreateCategory()"
+            [disabled]="creatingCategory()"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <div class="modal-fields single-column">
+
+          <label>
+
+            <span>Nombre</span>
+
+            <input
+              type="text"
+              [ngModel]="categoryName()"
+              (ngModelChange)="
+                categoryName.set($event);
+                categoryError.set('')
+              "
+              [disabled]="creatingCategory()"
+              placeholder="Ej. Mariscos"
+            >
+
+          </label>
+
+
+          <label>
+
+            <span>Orden de visualización</span>
+
+            <input
+              type="number"
+              min="0"
+              step="1"
+              [ngModel]="categoryDisplayOrder()"
+              (ngModelChange)="
+                categoryDisplayOrder.set($event)
+              "
+              [disabled]="creatingCategory()"
+            >
+
+          </label>
+
+        </div>
+
+
+        @if (categoryError()) {
+
+          <p class="error">
+            {{ categoryError() }}
+          </p>
+
+        }
+
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelCreateCategory()"
+            [disabled]="creatingCategory()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="createCategory()"
+            [disabled]="
+              creatingCategory()
+              || !categoryName().trim()
+            "
+          >
+            {{
+              creatingCategory()
+                ? 'Guardando...'
+                : 'Guardar categoría'
+            }}
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+  @if (selectedProduct(); as product) {
+
+    <div class="modal-backdrop">
+
+      <section class="presentation-modal">
+
+        <div class="modal-header">
+
+          <div>
+            <h2>Presentaciones</h2>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closePresentations()"
+            [disabled]="
+              presentationsLoading()
+              || creatingPresentation()
+            "
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <div class="product-summary">
+
+          <div class="product-summary-main">
+
+          <span class="product-summary-label">
+            Producto
+          </span>
+
+            <strong class="product-summary-name">
+              {{ product.name }}
+            </strong>
+
+          </div>
+
+          <span
+            class="product-summary-badge"
+            [class.direct]="product.inventoryMode === 'DIRECT'"
+            [class.manual]="product.inventoryMode === 'MANUAL_AT_CLOSE'"
+            [class.none]="product.inventoryMode === 'NOT_TRACKED'"
+          >
+            {{ inventoryModeLabel(product.inventoryMode) }}
+          </span>
+
+        </div>
+
+
+        @if (presentationsLoading()) {
+
+          <div class="presentation-state">
+            Cargando presentaciones...
+          </div>
+
+        } @else {
+
+          <div class="presentation-toolbar">
+
+            <div>
+              <strong>
+                Presentaciones registradas
+              </strong>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="openCreatePresentation()"
+              [disabled]="showCreatePresentation()"
+            >
+              + Nueva presentación
+            </button>
+
+          </div>
+
+
+          @if (presentations().length === 0) {
+
+            <div class="presentation-empty">
+
+              <p>
+                Este producto todavía no tiene presentaciones.
+              </p>
+
+            </div>
+
+          } @else {
+
+            <div class="presentation-table-wrapper">
+
+              <table class="presentation-table">
+
+                <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Unidad</th>
+                  <th>Precio</th>
+                  <th>Tipo</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                  @for (
+                    presentation of presentations();
+                    track presentation.id
+                    ) {
+
+                    <tr>
+
+                      <td>
+                        <strong>
+                          {{ presentation.name }}
+                        </strong>
+                      </td>
+
+                      <td>
+                        {{ presentation.unit.name }}
+                      </td>
+
+                      <td>
+
+                        @if (presentation.openPrice) {
+
+                          <span class="status-badge open-price">
+                          Precio abierto
+                        </span>
+
+                        } @else {
+
+                          {{
+                            presentation.salePrice
+                              | currency:'MXN'
+                          }}
+
+                        }
+
+                      </td>
+
+                      <td>
+
+                        @if (presentation.variableQuantity) {
+
+                          <span class="status-badge variable">
+                          Cantidad variable
+                        </span>
+
+                        } @else {
+
+                          <span class="status-badge fixed">
+                          Fija
+                        </span>
+
+                        }
+
+                      </td>
+
+                    </tr>
+
+                  }
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          }
+
+
+          @if (showCreatePresentation()) {
+
+            <section class="presentation-form">
+
+              <div class="presentation-form-header">
+
+                <div>
+                  <h3>
+                    Nueva presentación
+                  </h3>
+
+                  <p>
+                    Define cómo se vende este producto.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  class="modal-close small"
+                  (click)="cancelCreatePresentation()"
+                  [disabled]="creatingPresentation()"
+                  aria-label="Cerrar formulario"
+                >
+                  ×
+                </button>
+
+              </div>
+
+              <div class="product-context">
+                <span class="product-context-label">
+                  Inventario
+                </span>
+                <span
+                  class="inventory-mode-badge"
+                  [class.direct]="product.inventoryMode === 'DIRECT'"
+                  [class.manual]="product.inventoryMode === 'MANUAL_AT_CLOSE'"
+                  [class.none]="product.inventoryMode === 'NOT_TRACKED'"
+                >
+                  {{ inventoryModeLabel(product.inventoryMode) }}
+                </span>
+              </div>
+
+
+              <div class="modal-fields">
+
+                <label>
+
+                <span>
+                  Nombre
+                </span>
+
+                  <input
+                    type="text"
+                    [ngModel]="presentationName()"
+                    (ngModelChange)="
+                    presentationName.set($event);
+                    presentationError.set('')
+                  "
+                    [disabled]="creatingPresentation()"
+                    placeholder="Ej. Chico"
+                  >
+
+                </label>
+
+
+                <label>
+
+                <span>
+                  Unidad
+                </span>
+
+                  <select
+                    [ngModel]="presentationUnitId()"
+                    (ngModelChange)="
+                    presentationUnitId.set($event);
+                    presentationError.set('')
+                  "
+                    [disabled]="creatingPresentation()"
+                  >
+
+                    @for (
+                      unit of units();
+                      track unit.id
+                      ) {
+
+                      <option [value]="unit.id">
+                        {{ unit.name }} ({{ unit.symbol }})
+                      </option>
+
+                    }
+
+                  </select>
+
+                </label>
+
+
+                @if (product.inventoryMode !== 'NOT_TRACKED') {
+
+                  <label>
+
+                    <span>
+                      Equivalencia en inventario
+                    </span>
+
+                    <input
+                      type="number"
+                      min="0.000001"
+                      step="0.000001"
+                      [ngModel]="conversionFactor()"
+                      (ngModelChange)="
+                          conversionFactor.set($event);
+                          presentationError.set('')
+                        "
+                      [disabled]="creatingPresentation()"
+                    >
+
+                    <small class="field-help">
+                      Cantidad de inventario que representa
+                      1 unidad de esta presentación.
+                    </small>
+
+                  </label>
+
+                }
+
+
+                <label>
+
+                <span>
+                  Cantidad incluida en el precio
+                </span>
+
+                  <input
+                    type="number"
+                    min="0.001"
+                    step="0.001"
+                    [ngModel]="priceBasisQuantity()"
+                    (ngModelChange)="
+                    priceBasisQuantity.set($event);
+                    presentationError.set('')
+                  "
+                    [disabled]="creatingPresentation()"
+                  >
+
+                </label>
+
+
+                <label>
+
+                <span>
+                  Precio de venta
+                </span>
+
+                  <div class="money-input">
+
+                  <span class="money-prefix">
+                    MX$
+                  </span>
+
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      inputmode="decimal"
+                      [ngModel]="salePrice()"
+                      (ngModelChange)="
+                      salePrice.set($event);
+                      presentationError.set('')
+                    "
+                      [disabled]="
+                      creatingPresentation()
+                      || openPrice()
+                    "
+                      placeholder="0.00"
+                    >
+
+                  </div>
+
+                </label>
+
+
+                <label>
+
+                <span>
+                  Orden de visualización
+                </span>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    [ngModel]="presentationDisplayOrder()"
+                    (ngModelChange)="
+                    presentationDisplayOrder.set($event)
+                  "
+                    [disabled]="creatingPresentation()"
+                  >
+
+                </label>
+
+              </div>
+
+              <div class="switches">
+                <div class="option-card">
+
+                  <label class="check-option">
+
+                    <input
+                      type="checkbox"
+                      [ngModel]="openPrice()"
+                      (ngModelChange)="changeOpenPrice($event)"
+                      [disabled]="creatingPresentation()"
+                    >
+
+                    <span class="option-content">
+
+                      <strong>
+                        El precio se captura al vender
+                      </strong>
+
+                      <small>
+                        Úsalo cuando esta presentación no tiene un precio fijo.
+                      </small>
+
+                    </span>
+
+                  </label>
+
+                </div>
+
+
+                <div class="option-card">
+
+                  <label class="check-option">
+
+                    <input
+                      type="checkbox"
+                      [ngModel]="variableQuantity()"
+                      (ngModelChange)="changeVariableQuantity($event)"
+                      [disabled]="creatingPresentation()"
+                    >
+
+                    <span class="option-content">
+
+                      <strong>
+                        La cantidad puede variar
+                      </strong>
+
+                      <small>
+                        Permite vender cantidades como 0.250 kg, 1.5 kg o similares.
+                      </small>
+
+                    </span>
+
+                  </label>
+
+                </div>
+              </div>
+
+
+              @if (variableQuantity()) {
+
+                <div class="variable-section">
+
+                  <label>
+
+                  <span>
+                    Cantidad mínima
+                  </span>
+
+                    <input
+                      type="number"
+                      min="0.001"
+                      step="0.001"
+                      [ngModel]="minimumQuantity()"
+                      (ngModelChange)="
+                      minimumQuantity.set($event);
+                      presentationError.set('')
+                    "
+                      [disabled]="creatingPresentation()"
+                    >
+
+                  </label>
+
+                </div>
+
+              }
+
+
+              @if (presentationError()) {
+
+                <p class="error">
+                  {{ presentationError() }}
+                </p>
+
+              }
+
+
+              <div class="modal-actions">
+
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="cancelCreatePresentation()"
+                  [disabled]="creatingPresentation()"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="createPresentation()"
+                  [disabled]="
+                  creatingPresentation()
+                  || !presentationName().trim()
+                  || !presentationUnitId()
+                  || (product.inventoryMode !== 'NOT_TRACKED'
+                    && (
+                      conversionFactor() === null
+                      || conversionFactor()! <= 0
+                    )
+                  )
+                  || priceBasisQuantity() === null
+                  || priceBasisQuantity()! < 0.001
+                  || (
+                    !openPrice()
+                    && salePrice() === null
+                  )
+                  || (
+                    variableQuantity()
+                    && (
+                      minimumQuantity() === null
+                      || minimumQuantity()! < 0.001
+                    )
+                  )
+                "
+                >
+                  {{
+                    creatingPresentation()
+                      ? 'Guardando...'
+                      : 'Guardar presentación'
+                  }}
+                </button>
+
+              </div>
+
+            </section>
+
+          }
+
+        }
+
+      </section>
+
+    </div>
+
+  }
+
+</main>

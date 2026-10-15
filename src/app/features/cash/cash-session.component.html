@@ -1,0 +1,320 @@
+<main>
+  <h1>Caja</h1>
+
+  @if (loading()) {
+    <p>Cargando caja...</p>
+  }
+
+  @if (error()) {
+    <p>{{ error() }}</p>
+  }
+
+  @if (!loading() && !cashSession()) {
+
+    <section>
+      <h2>Abrir caja</h2>
+
+      <p>
+        No hay una caja abierta.
+      </p>
+
+      <label>
+        Monto inicial
+
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [ngModel]="openingAmount()"
+          (ngModelChange)="openingAmount.set($event)"
+          [disabled]="opening()"
+        >
+      </label>
+
+      @if (openError()) {
+        <p>
+          {{ openError() }}
+        </p>
+      }
+
+      <button
+        type="button"
+        (click)="openCashSession()"
+        [disabled]="opening()"
+      >
+        {{
+          opening()
+            ? 'Abriendo...'
+            : 'Abrir caja'
+        }}
+      </button>
+    </section>
+
+  }
+
+  @if (cashSession()) {
+
+    <section class="cash-overview">
+
+      <article class="cash-card cash-status-card">
+
+        <div class="cash-card-header">
+          <div>
+          <span class="eyebrow">
+            CAJA ACTUAL
+          </span>
+
+            <h2>
+              {{ cashSession()!.openedFromTerminalName }}
+            </h2>
+          </div>
+
+          <span
+            class="cash-status-badge"
+            [class.closed]="cashSession()!.status !== 'OPEN'"
+          >
+          {{
+              cashSession()!.status === 'OPEN'
+                ? 'Abierta'
+                : 'Cerrada'
+            }}
+        </span>
+        </div>
+
+        <div class="cash-info-grid">
+
+          <div class="cash-info-item">
+            <span>Fecha de operación</span>
+            <strong>
+              {{ cashSession()?.businessDate | date:'d MMM yyyy':'':'es-MX' }}
+            </strong>
+          </div>
+
+          <div class="cash-info-item">
+            <span>Monto inicial</span>
+            <strong>
+              {{ cashSession()!.openingAmount | currency:'MXN' }}
+            </strong>
+          </div>
+
+          <div class="cash-info-item">
+            <span>Abierta por</span>
+            <strong>
+              {{ cashSession()!.openedByDisplayName }}
+            </strong>
+          </div>
+
+          <div class="cash-info-item">
+            <span>Apertura</span>
+            <strong>
+              {{ cashSession()!.openedAt | date:'d MMM yyyy, h:mm a':'':'es-MX' }}
+            </strong>
+          </div>
+
+          <div class="cash-info-item">
+            <span>Reaperturas</span>
+            <strong>
+              {{ cashSession()!.reopenCount }}
+            </strong>
+          </div>
+
+        </div>
+
+      </article>
+
+
+      @if (movementSummary()) {
+
+        <article class="cash-card">
+
+          <div class="cash-card-header">
+            <div>
+            <span class="eyebrow">
+              MOVIMIENTOS
+            </span>
+
+              <h2>
+                Resumen de caja
+              </h2>
+            </div>
+          </div>
+
+          <div class="movement-grid">
+
+            <div class="movement-item">
+              <span>Ventas en efectivo</span>
+              <strong>
+                {{
+                  movementTotal('SALE_PAYMENT', 'IN')
+                    | currency:'MXN'
+                }}
+              </strong>
+            </div>
+
+            <div class="movement-item">
+              <span>Abonos de clientes</span>
+              <strong>
+                {{
+                  movementTotal('CUSTOMER_PAYMENT', 'IN')
+                    | currency:'MXN'
+                }}
+              </strong>
+            </div>
+
+            <div class="movement-item">
+              <span>Otras entradas</span>
+              <strong>
+                {{
+                  otherIncomeTotal()
+                    | currency:'MXN'
+                }}
+              </strong>
+            </div>
+
+            <div class="movement-item outcome">
+              <span>Salidas</span>
+              <strong>
+                -{{
+                  movementSummary()!.outcomeTotal
+                    | currency:'MXN':'symbol':'1.2-2'
+                }}
+              </strong>
+            </div>
+
+          </div>
+
+          <div class="cash-totals">
+
+            <div>
+              <span>Movimientos netos</span>
+              <strong>
+                {{
+                  movementSummary()!.incomeTotal
+                  - movementSummary()!.outcomeTotal
+                    | currency:'MXN'
+                }}
+              </strong>
+            </div>
+
+            <div>
+              <span>Efectivo inicial</span>
+              <strong>
+                {{
+                  movementSummary()!.openingAmount
+                    | currency:'MXN'
+                }}
+              </strong>
+            </div>
+
+            <div class="expected-total">
+              <span>Efectivo esperado</span>
+              <strong>
+                {{
+                  movementSummary()!.expectedAmount
+                    | currency:'MXN'
+                }}
+              </strong>
+            </div>
+
+          </div>
+
+        </article>
+
+      }
+
+
+      @if (cashSession()!.status === 'OPEN') {
+
+        <article class="cash-card close-cash-card">
+
+          <div class="cash-card-header">
+            <div>
+            <span class="eyebrow">
+              CIERRE
+            </span>
+
+              <h2>
+                Cerrar caja
+              </h2>
+            </div>
+          </div>
+
+          <p class="cash-help">
+            Captura el efectivo contado físicamente antes de cerrar.
+          </p>
+
+          <label class="cash-field">
+            <span>Efectivo contado</span>
+            <div class="money-input">
+              <span class="money-prefix">MX$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                inputmode="decimal"
+                [ngModel]="closingAmount()"
+                (ngModelChange)="closingAmount.set($event)"
+                [disabled]="closing()"
+                placeholder="0.00"
+              >
+            </div>
+          </label>
+
+          @if (closeError()) {
+            <p class="cash-error">
+              {{ closeError() }}
+            </p>
+          }
+
+          <button
+            type="button"
+            class="btn btn-primary close-cash-button"
+            [disabled]="!canCloseCashSession()"
+            (click)="confirmCloseCashSession()"
+          >
+            Cerrar caja
+          </button>
+
+        </article>
+
+      }
+
+    </section>
+
+  }
+  @if (showCloseConfirmation()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <h3>Confirmar cierre de caja</h3>
+
+        <div class="modal-summary-row">
+          <span>Efectivo esperado</span>
+          <strong>{{ movementSummary()!.expectedAmount | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+
+        <div class="modal-summary-row">
+          <span>Efectivo contado</span>
+          <strong>{{ countedAmountNumber | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+
+        <div class="modal-summary-row">
+          <span>Diferencia</span>
+          <strong>{{ closingDifference | currency:'MXN':'symbol':'1.2-2' }}</strong>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="cancelCloseConfirmation()"  [disabled]="closing()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" (click)="closeCashSession()"  [disabled]="closing()">
+            {{
+              closing()
+                ? 'Cerrando...'
+                : 'Confirmar cierre'
+            }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</main>

@@ -1,0 +1,487 @@
+<main class="receivables-page">
+
+  <header>
+
+    <button
+      type="button"
+      (click)="goBack()"
+    >
+      Volver
+    </button>
+
+    <div>
+      <h1>
+        Cuenta del cliente
+      </h1>
+
+      @if (customer()) {
+        <strong>
+          {{ customer()!.name }}
+        </strong>
+      }
+    </div>
+
+  </header>
+
+  @if (loading()) {
+
+    <p>
+      Cargando cuentas...
+    </p>
+
+  }
+
+  @if (error()) {
+
+    <p class="input-error">
+      {{ error() }}
+    </p>
+
+  }
+
+  @if (!loading() && !error()) {
+
+    <section>
+
+      <div>
+        <span>
+          Saldo total
+        </span>
+
+        <strong>
+          {{
+            totalBalance()
+              | currency:'MXN'
+          }}
+        </strong>
+      </div>
+
+      @if (totalBalance() > 0 && !showPayment()) {
+
+        <button
+          type="button"
+          class="primary-button"
+          (click)="startPayment()"
+        >
+          Registrar abono
+        </button>
+      }
+
+      @if (showPayment()) {
+
+        <section class="payment-panel">
+
+          <h2>
+            Registrar abono
+          </h2>
+
+          <div>
+      <span>
+        Saldo actual
+      </span>
+
+            <strong>
+              {{
+                totalBalance()
+                  | currency:'MXN'
+              }}
+            </strong>
+          </div>
+
+          @if (selectedReceivable()) {
+
+            <p>
+              Abono a cuenta
+              #{{ selectedReceivable()!.saleNumber }}
+            </p>
+
+          } @else {
+
+            <p>
+              El abono se aplicará primero
+              a las cuentas más antiguas.
+            </p>
+
+          }
+
+          <label>
+            Método de pago
+
+            <select
+              [ngModel]="paymentMethod()"
+              (ngModelChange)="paymentMethod.set($event)"
+            >
+              <option value="CASH">
+                Efectivo
+              </option>
+
+              <option value="TRANSFER">
+                Transferencia
+              </option>
+
+              <option value="CARD">
+                Tarjeta
+              </option>
+            </select>
+          </label>
+
+          @if (paymentMethod() === 'CASH') {
+
+            <label>
+              Importe a aplicar
+
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                [max]="selectedReceivable()?.balance ?? totalBalance()"
+                [ngModel]="paymentAmount()"
+                (ngModelChange)="paymentAmount.set($event)"
+              >
+            </label>
+
+            <label>
+              Efectivo recibido
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                [ngModel]="cashReceived()"
+                (ngModelChange)="cashReceived.set($event)"
+              >
+            </label>
+
+            @if (
+              paymentAmount() !== null &&
+              cashReceived() !== null
+              ) {
+
+              <div class="change-row">
+                <span>Cambio</span>
+
+                <strong>
+                  {{ change() | currency:'MXN' }}
+                </strong>
+              </div>
+
+            }
+
+          } @else {
+
+            <label>
+              Importe
+
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                [max]="selectedReceivable()?.balance ?? totalBalance()"
+                [ngModel]="paymentAmount()"
+                (ngModelChange)="paymentAmount.set($event)"
+              >
+            </label>
+
+          }
+
+          @if (paymentError()) {
+            <p class="input-error">
+              {{ paymentError() }}
+            </p>
+          }
+
+          <div class="payment-actions">
+
+            <button
+              type="button"
+              class="primary-button"
+              (click)="applyPayment()"
+              [disabled]="paymentLoading()"
+            >
+              {{
+                paymentLoading()
+                  ? 'Aplicando...'
+                  : 'Aplicar abono'
+              }}
+            </button>
+
+            <button
+              type="button"
+              (click)="cancelPayment()"
+              [disabled]="paymentLoading()"
+            >
+              Cancelar
+            </button>
+
+          </div>
+
+        </section>
+
+      }
+
+      @if (
+        receivables().length === 0
+        ) {
+
+        <p>
+          Este cliente no tiene
+          cuentas pendientes.
+        </p>
+
+      }
+
+      @for (
+        receivable of receivables();
+        track receivable.id
+        ) {
+
+        <article>
+
+          <div>
+            <strong>
+              Cuenta
+              #{{ receivable.saleNumber }}
+            </strong>
+
+            <span>
+              {{
+                receivable.openedAt
+                  | date:'short'
+              }}
+            </span>
+          </div>
+
+          <div>
+
+            <span>
+              Importe original
+            </span>
+
+            <strong>
+              {{
+                receivable.originalAmount
+                  | currency:'MXN'
+              }}
+            </strong>
+
+          </div>
+
+          <div>
+
+            <span>
+              Saldo
+            </span>
+
+            <strong>
+              {{
+                receivable.balance
+                  | currency:'MXN'
+              }}
+            </strong>
+
+          </div>
+
+          <button
+            type="button"
+            (click)="startReceivablePayment(receivable)"
+            [disabled]="paymentLoading()"
+          >
+            Abonar a esta cuenta
+          </button>
+
+        </article>
+
+      }
+
+      <section class="payment-history">
+
+        <h2>
+          Historial de abonos
+        </h2>
+
+        @if (paymentsLoading()) {
+
+          <p>
+            Cargando historial...
+          </p>
+
+        }
+
+        @if (paymentsError()) {
+
+          <p class="input-error">
+            {{ paymentsError() }}
+          </p>
+
+        }
+
+        @if (
+          !paymentsLoading() &&
+          !paymentsError() &&
+          creditPayments().length === 0
+          ) {
+
+          <p>
+            Este cliente todavía no tiene
+            abonos registrados.
+          </p>
+
+        }
+
+        @for (
+          payment of creditPayments();
+          track payment.id
+          ) {
+
+          <article class="payment-history-item">
+
+            <div>
+
+              <strong>
+                {{
+                  payment.amount
+                    | currency:'MXN'
+                }}
+              </strong>
+
+              <span>
+          {{
+                  payment.receivedAt
+                    | date:'short'
+                }}
+        </span>
+
+            </div>
+
+            <div>
+
+        <span>
+          Método
+        </span>
+
+              <strong>
+                @switch (payment.paymentMethod) {
+
+                  @case ('CASH') {
+                    Efectivo
+                  }
+
+                  @case ('TRANSFER') {
+                    Transferencia
+                  }
+
+                  @case ('CARD') {
+                    Tarjeta
+                  }
+
+                }
+              </strong>
+
+            </div>
+
+          </article>
+
+        }
+
+      </section>
+
+      <section class="paid-receivables">
+
+        <h2>
+          Cuentas liquidadas
+        </h2>
+
+        @if (paidReceivablesLoading()) {
+
+          <p>
+            Cargando cuentas liquidadas...
+          </p>
+
+        }
+
+        @if (paidReceivablesError()) {
+
+          <p class="input-error">
+            {{ paidReceivablesError() }}
+          </p>
+
+        }
+
+        @if (
+          !paidReceivablesLoading() &&
+          !paidReceivablesError() &&
+          paidReceivables().length === 0
+          ) {
+
+          <p>
+            Este cliente todavía no tiene
+            cuentas liquidadas.
+          </p>
+
+        }
+
+        @for (
+          receivable of paidReceivables();
+          track receivable.id
+          ) {
+
+          <article class="paid-receivable-item">
+
+            <div>
+
+              <strong>
+                Cuenta
+                #{{ receivable.saleNumber }}
+              </strong>
+
+              <span>
+                Abierta:
+                    {{
+                      receivable.openedAt
+                        | date:'short'
+                    }}
+              </span>
+
+            </div>
+
+            <div>
+
+        <span>
+          Importe original
+        </span>
+
+              <strong>
+                {{
+                  receivable.originalAmount
+                    | currency:'MXN'
+                }}
+              </strong>
+
+            </div>
+
+            <div>
+
+        <span>
+          Liquidada
+        </span>
+
+              <strong>
+                {{
+                  receivable.paidAt
+                    | date:'short'
+                }}
+              </strong>
+
+            </div>
+
+          </article>
+
+        }
+
+      </section>
+
+    </section>
+
+  }
+
+</main>

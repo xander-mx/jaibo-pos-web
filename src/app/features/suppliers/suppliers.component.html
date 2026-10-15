@@ -1,0 +1,377 @@
+<main class="suppliers-page">
+
+  <header class="page-header">
+
+    <div>
+      <h1>Proveedores</h1>
+      <p>
+        Administra los proveedores utilizados en tus compras.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="openCreateForm()"
+    >
+      + Nuevo proveedor
+    </button>
+
+  </header>
+
+
+  @if (createSuccess()) {
+    <div class="success-message">
+      {{ createSuccess() }}
+    </div>
+  }
+
+
+  @if (loading()) {
+    <section class="state-card">
+      Cargando proveedores...
+    </section>
+  }
+
+
+  @if (error()) {
+    <section class="state-card error">
+      {{ error() }}
+    </section>
+  }
+
+
+  @if (
+    !loading()
+    && !error()
+    && suppliers().length === 0
+    ) {
+
+    <section class="empty-state">
+
+      <h2>
+        No hay proveedores registrados
+      </h2>
+
+      <p>
+        Crea tu primer proveedor para utilizarlo en compras.
+      </p>
+
+    </section>
+
+  }
+
+
+  @if (
+    !loading()
+    && !error()
+    && suppliers().length > 0
+    ) {
+
+    <section class="table-card">
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+          </thead>
+
+          <tbody>
+
+            @for (
+              supplier of suppliers();
+              track supplier.id
+              ) {
+
+              <tr>
+
+                <td class="supplier-name">
+                  {{ supplier.name }}
+                </td>
+
+                <td class="phone-cell">
+                  @if (supplier.phone) {
+
+                    <a class="phone-link" [href]="'tel:' + supplier.phone">
+                      {{ formatPhone(supplier.phone) }}
+                    </a>
+
+                  } @else {
+
+                    —
+
+                  }
+                </td>
+
+                <td>
+
+                  @if (supplier.active) {
+
+                    <span class="status-badge active">
+                      Activo
+                    </span>
+
+                  } @else {
+
+                    <span class="status-badge inactive">
+                      Inactivo
+                    </span>
+
+                  }
+
+                </td>
+                <td class="actions-cell">
+
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="openEditForm(supplier)"
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    [class.danger-action]="supplier.active"
+                    (click)="requestStatusChange(supplier)"
+                  >
+                    {{
+                      supplier.active
+                        ? 'Desactivar'
+                        : 'Activar'
+                    }}
+                  </button>
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  }
+
+
+  @if (showCreateForm()) {
+
+    <div class="modal-backdrop">
+
+      <section class="supplier-modal">
+
+        <div class="modal-header">
+
+          <div>
+            <h2>
+              {{
+                editingSupplierId()
+                  ? 'Editar proveedor'
+                  : 'Nuevo proveedor'
+              }}
+            </h2>
+
+            <p>
+              {{
+                editingSupplierId()
+                  ? 'Actualiza los datos del proveedor.'
+                  : 'Registra los datos básicos del proveedor.'
+              }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelCreate()"
+            [disabled]="creating()"
+            aria-label="Cerrar"
+            title="Cerrar"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <div class="modal-fields">
+
+          <label>
+            <span>Nombre</span>
+
+            <input
+              type="text"
+              [ngModel]="name()"
+              (ngModelChange)="
+                name.set($event);
+                createError.set('')
+              "
+              [disabled]="creating()"
+              placeholder="Nombre del proveedor"
+              autocomplete="organization"
+            >
+          </label>
+
+
+          <label>
+            <span>Teléfono (opcional)</span>
+
+            <input
+              type="tel"
+              inputmode="numeric"
+              maxlength="10"
+              [ngModel]="phone()"
+              (ngModelChange)="phone.set($event)"
+              [disabled]="creating()"
+              placeholder="33 1234 5678"
+              autocomplete="tel"
+            />
+          </label>
+
+        </div>
+
+
+        @if (createError()) {
+          <p class="error">
+            {{ createError() }}
+          </p>
+        }
+
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelCreate()"
+            [disabled]="creating()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="saveSupplier()"
+            [disabled]="creating() || !name().trim()"
+          >
+            {{
+              creating()
+                ? 'Guardando...'
+                : (
+                  editingSupplierId()
+                    ? 'Guardar cambios'
+                    : 'Guardar proveedor'
+                )
+            }}
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+</main>
+
+@if (supplierStatusTarget(); as supplier) {
+
+  <div class="modal-backdrop">
+
+    <section class="confirm-modal">
+
+      <div class="modal-header">
+
+        <div>
+          <h2>
+            {{
+              supplier.active
+                ? 'Desactivar proveedor'
+                : 'Activar proveedor'
+            }}
+          </h2>
+
+          <p>
+            @if (supplier.active) {
+              El proveedor dejará de estar disponible para nuevas compras,
+                pero conservará todo su historial.
+            } @else {
+              El proveedor volverá a estar disponible para nuevas compras.
+            }
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="modal-close"
+          (click)="cancelStatusChange()"
+          [disabled]="statusLoading()"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <p class="confirm-name">
+        {{ supplier.name }}
+      </p>
+
+      @if (statusError()) {
+        <p class="error">
+          {{ statusError() }}
+        </p>
+      }
+
+      <div class="modal-actions">
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="cancelStatusChange()"
+          [disabled]="statusLoading()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="btn"
+          [class.btn-danger]="supplier.active"
+          [class.btn-primary]="!supplier.active"
+          (click)="confirmStatusChange()"
+          [disabled]="statusLoading()"
+        >
+          {{
+            statusLoading()
+              ? 'Procesando...'
+              : (
+                supplier.active
+                  ? 'Desactivar'
+                  : 'Activar'
+              )
+          }}
+        </button>
+
+      </div>
+
+    </section>
+
+  </div>
+
+}

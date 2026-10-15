@@ -1,0 +1,428 @@
+<main class="purchases-page">
+
+  <header class="page-header">
+
+    <div>
+      <h1>Compras</h1>
+      <p>Consulta y registra las compras de mercancía.</p>
+    </div>
+
+    @if (!showCreateForm()) {
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="openCreateForm()"
+      >
+        + Nueva compra
+      </button>
+    }
+
+  </header>
+
+
+  @if (showCreateForm()) {
+
+    <div class="modal-backdrop">
+
+      <section class="purchase-modal">
+
+        <div class="modal-header">
+          <div>
+          <span class="eyebrow">
+            NUEVA COMPRA
+          </span>
+
+            <h2>
+              Registrar compra
+            </h2>
+
+            <p>
+              Selecciona un proveedor y agrega una nota si es necesario.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelCreate()"
+            [disabled]="creating()"
+            aria-label="Cerrar"
+            title="Cerrar"
+          >
+            ×
+          </button>
+        </div>
+
+
+        <div class="modal-fields">
+
+          <label>
+            <span>Proveedor</span>
+
+            <select
+              [ngModel]="supplierId()"
+              (ngModelChange)="supplierId.set($event)"
+              [disabled]="creating()"
+            >
+              <option value="">
+                Sin proveedor
+              </option>
+
+              @for (
+                supplier of suppliers();
+                track supplier.id
+                ) {
+                <option [value]="supplier.id">
+                  {{ supplier.name }}
+                </option>
+              }
+
+            </select>
+          </label>
+
+
+          <label>
+            <span>Nota</span>
+
+            <textarea
+              rows="3"
+              [ngModel]="note()"
+              (ngModelChange)="note.set($event)"
+              [disabled]="creating()"
+              placeholder="Opcional"
+            ></textarea>
+          </label>
+
+        </div>
+
+
+        @if (createError()) {
+          <p class="error">
+            {{ createError() }}
+          </p>
+        }
+
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelCreate()"
+            [disabled]="creating()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="createPurchase()"
+            [disabled]="creating()"
+          >
+            {{
+              creating()
+                ? 'Creando...'
+                : 'Crear compra'
+            }}
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+
+  <section class="filters-card">
+
+    <div class="filters-title">
+      <span class="eyebrow">
+        FILTROS
+      </span>
+    </div>
+
+    <div class="filters">
+
+      <label>
+        <span>Estado</span>
+
+        <select
+          [ngModel]="filterStatus()"
+          (ngModelChange)="filterStatus.set($event)"
+        >
+          <option value="">Todos</option>
+          <option value="DRAFT">Borrador</option>
+          <option value="RECEIVED">Recibida</option>
+          <option value="CANCELLED">Cancelada</option>
+        </select>
+      </label>
+
+
+      <label>
+        <span>Estado de pago</span>
+
+        <select
+          [ngModel]="filterPaymentStatus()"
+          (ngModelChange)="filterPaymentStatus.set($event)"
+        >
+          <option value="">Todos</option>
+          <option value="PENDING">Pendiente</option>
+          <option value="PARTIALLY_PAID">Parcial</option>
+          <option value="PAID">Pagada</option>
+        </select>
+      </label>
+
+
+      <label>
+        <span>Proveedor</span>
+
+        <select
+          [ngModel]="filterSupplierId()"
+          (ngModelChange)="filterSupplierId.set($event)"
+        >
+          <option value="">Todos</option>
+
+          @for (
+            supplier of suppliers();
+            track supplier.id
+            ) {
+            <option [value]="supplier.id">
+              {{ supplier.name }}
+            </option>
+          }
+
+        </select>
+      </label>
+
+
+      <label class="pending-check">
+
+        <input
+          type="checkbox"
+          [ngModel]="filterPendingOnly()"
+          (ngModelChange)="filterPendingOnly.set($event)"
+        >
+
+        <span>
+          Solo con saldo pendiente
+        </span>
+
+      </label>
+
+
+      <div class="filter-actions">
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="loadPurchases()"
+        >
+          Aplicar filtros
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="clearFilters()"
+        >
+          Limpiar
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  @if (loading()) {
+
+    <section class="state-card">
+      Cargando compras...
+    </section>
+
+  }
+
+
+  @if (error()) {
+
+    <section class="state-card error">
+      {{ error() }}
+    </section>
+
+  }
+
+
+  @if (
+    !loading()
+    && !error()
+    && purchases().length === 0
+    ) {
+
+    <section class="empty-state">
+
+      <h2>No hay compras registradas</h2>
+
+      <p>
+        Crea una compra o modifica los filtros actuales.
+      </p>
+
+    </section>
+
+  }
+
+
+  @if (
+    !loading()
+    && !error()
+    && purchases().length > 0
+    ) {
+
+    <section class="table-card">
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+          <tr>
+            <th>Proveedor</th>
+            <th>Estado</th>
+            <th>Pago</th>
+            <th class="money-header">Total</th>
+            <th class="money-header">Pagado</th>
+            <th class="money-header">Pendiente</th>
+            <th>Fecha</th>
+            <th></th>
+          </tr>
+          </thead>
+
+          <tbody>
+
+            @for (
+              purchase of purchases();
+              track purchase.id
+              ) {
+
+              <tr>
+
+                <td class="supplier-cell">
+                  {{
+                    purchase.supplierName
+                    || 'Sin proveedor'
+                  }}
+                </td>
+
+
+                <td>
+
+                  @switch (purchase.status) {
+
+                    @case ('DRAFT') {
+                      <span class="status-badge neutral">
+                        Borrador
+                      </span>
+                    }
+
+                    @case ('RECEIVED') {
+                      <span class="status-badge success">
+                        Recibida
+                      </span>
+                    }
+
+                    @case ('CANCELLED') {
+                      <span class="status-badge danger">
+                        Cancelada
+                      </span>
+                    }
+
+                  }
+
+                </td>
+
+
+                <td>
+
+                  @if (purchase.status === 'DRAFT') {
+                    <span class="payment-badge neutral">
+                      No finalizada
+                    </span>
+                  } @else {
+
+                    @switch (purchase.paymentStatus) {
+
+                      @case ('PENDING') {
+                        <span class="payment-badge pending">
+                          Pendiente
+                        </span>
+                      }
+
+                      @case ('PARTIALLY_PAID') {
+                        <span class="payment-badge partial">
+                          Parcial
+                        </span>
+                      }
+
+                      @case ('PAID') {
+                        <span class="payment-badge paid">
+                          Pagada
+                        </span>
+                      }
+                    }
+                  }
+                </td>
+
+                <td class="money-cell">
+                  {{ purchase.total | currency:'MXN' }}
+                </td>
+
+                <td class="money-cell">
+                  {{ purchase.paidAmount | currency:'MXN' }}
+                </td>
+
+                <td
+                  class="money-cell"
+                  [class.pending-money]="
+                    purchase.pendingBalance > 0
+                  "
+                >
+                  {{ purchase.pendingBalance | currency:'MXN' }}
+                </td>
+
+                <td class="date-cell">
+                  {{
+                    purchase.createdAt
+                      | date:'d MMM yyyy, h:mm a':'':'es-MX'
+                  }}
+                </td>
+
+                <td class="actions-cell">
+
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="openPurchase(purchase.id)"
+                  >
+                    Ver compra
+                  </button>
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  }
+
+</main>

@@ -1,0 +1,566 @@
+<main class="users-page">
+
+  <header class="page-header">
+
+    <div>
+      <h1>Usuarios</h1>
+
+      <p>
+        Administra los usuarios con acceso al sistema.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="openCreateForm()"
+    >
+      + Nuevo usuario
+    </button>
+
+  </header>
+
+
+  @if (passwordSuccess()) {
+
+    <div class="success-message">
+      {{ passwordSuccess() }}
+    </div>
+
+  }
+
+
+  @if (actionError()) {
+
+    <div class="error-message">
+      {{ actionError() }}
+    </div>
+
+  }
+
+
+  @if (loading()) {
+
+    <section class="state-card">
+      Cargando usuarios...
+    </section>
+
+  } @else if (error()) {
+
+    <section class="state-card error">
+      {{ error() }}
+    </section>
+
+  } @else {
+
+    <section class="users-card">
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+          </thead>
+
+          <tbody>
+
+            @for (
+              user of users();
+              track user.id
+              ) {
+
+              <tr>
+
+                <td class="username-cell">
+                  {{ user.username }}
+                </td>
+
+                <td>
+                  {{ user.displayName }}
+                </td>
+
+                <td>
+
+                  @if (user.role === 'ADMIN') {
+
+                    <span class="role-badge admin">
+                      Administrador
+                    </span>
+
+                  } @else {
+
+                    <span class="role-badge cashier">
+                      Cajero
+                    </span>
+
+                  }
+
+                </td>
+
+                <td>
+
+                  <span
+                    class="status-badge"
+                    [class.active]="user.active"
+                    [class.inactive]="!user.active"
+                  >
+                    {{
+                      user.active
+                        ? 'Activo'
+                        : 'Inactivo'
+                    }}
+                  </span>
+
+                </td>
+
+                <td class="actions-cell">
+
+                  @if (user.active) {
+
+                    <button
+                      type="button"
+                      class="btn btn-secondary danger-action"
+                      (click)="requestDeactivateUser(user)"
+                      [disabled]="actionUserId() === user.id"
+                    >
+                      Desactivar
+                    </button>
+
+                  } @else {
+
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      (click)="activateUser(user)"
+                      [disabled]="actionUserId() === user.id"
+                    >
+                      {{
+                        actionUserId() === user.id
+                          ? 'Procesando...'
+                          : 'Activar'
+                      }}
+                    </button>
+
+                  }
+
+
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="startPasswordReset(user)"
+                    [disabled]="actionUserId() === user.id"
+                  >
+                    Restablecer contraseña
+                  </button>
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  }
+
+
+  <!-- NUEVO USUARIO -->
+
+  @if (showCreateForm()) {
+
+    <div class="modal-backdrop">
+
+      <section class="user-modal">
+
+        <div class="modal-header">
+
+          <div>
+
+            <h2>
+              Nuevo usuario
+            </h2>
+
+            <p>
+              Crea un usuario con acceso al punto de venta.
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelCreate()"
+            [disabled]="creating()"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <form
+          (ngSubmit)="createUser()"
+        >
+
+          <div class="modal-fields">
+
+            <label>
+
+              <span>
+                Usuario
+              </span>
+
+              <input
+                type="text"
+                name="username"
+                autocomplete="username"
+                [ngModel]="username()"
+                (ngModelChange)="
+                  username.set($event);
+                  createError.set('')
+                "
+                [disabled]="creating()"
+                placeholder="Ej. cajero1"
+                required
+              >
+
+            </label>
+
+
+            <label>
+
+              <span>
+                Nombre
+              </span>
+
+              <input
+                type="text"
+                name="displayName"
+                autocomplete="name"
+                [ngModel]="displayName()"
+                (ngModelChange)="
+                  displayName.set($event);
+                  createError.set('')
+                "
+                [disabled]="creating()"
+                placeholder="Nombre del usuario"
+                required
+              >
+
+            </label>
+
+
+            <label>
+
+              <span>
+                Contraseña
+              </span>
+
+              <input
+                type="password"
+                name="password"
+                autocomplete="new-password"
+                [ngModel]="password()"
+                (ngModelChange)="
+                  password.set($event);
+                  createError.set('')
+                "
+                [disabled]="creating()"
+                placeholder="Contraseña"
+                required
+              >
+
+            </label>
+
+
+            <label>
+
+              <span>
+                Rol
+              </span>
+
+              <select
+                name="role"
+                [ngModel]="role()"
+                (ngModelChange)="role.set($event)"
+                [disabled]="creating()"
+              >
+
+                <option value="CASHIER">
+                  Cajero
+                </option>
+
+                <option value="ADMIN">
+                  Administrador
+                </option>
+
+              </select>
+
+            </label>
+
+          </div>
+
+
+          @if (createError()) {
+
+            <p class="error">
+              {{ createError() }}
+            </p>
+
+          }
+
+
+          <div class="modal-actions">
+
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="cancelCreate()"
+              [disabled]="creating()"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="
+                creating()
+                || !username().trim()
+                || !displayName().trim()
+                || !password()
+              "
+            >
+              {{
+                creating()
+                  ? 'Guardando...'
+                  : 'Crear usuario'
+              }}
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+    </div>
+
+  }
+
+
+  <!-- RESTABLECER CONTRASEÑA -->
+
+  @if (passwordUser(); as user) {
+
+    <div class="modal-backdrop">
+
+      <section class="user-modal">
+
+        <div class="modal-header">
+
+          <div>
+
+            <h2>
+              Restablecer contraseña
+            </h2>
+
+            <p>
+              Define una nueva contraseña para
+              <strong>
+                {{ user.displayName }}
+              </strong>.
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelPasswordReset()"
+            [disabled]="passwordLoading()"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <div class="modal-fields">
+
+          <label>
+
+            <span>
+              Nueva contraseña
+            </span>
+
+            <input
+              type="password"
+              autocomplete="new-password"
+              [ngModel]="newPassword()"
+              (ngModelChange)="
+                newPassword.set($event);
+                passwordError.set('')
+              "
+              [disabled]="passwordLoading()"
+            >
+
+          </label>
+
+
+          <label>
+
+            <span>
+              Confirmar contraseña
+            </span>
+
+            <input
+              type="password"
+              autocomplete="new-password"
+              [ngModel]="confirmPassword()"
+              (ngModelChange)="
+                confirmPassword.set($event);
+                passwordError.set('')
+              "
+              [disabled]="passwordLoading()"
+            >
+
+          </label>
+
+        </div>
+
+
+        @if (passwordError()) {
+
+          <p class="error">
+            {{ passwordError() }}
+          </p>
+
+        }
+
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelPasswordReset()"
+            [disabled]="passwordLoading()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="resetPassword()"
+            [disabled]="
+              passwordLoading()
+              || !newPassword()
+              || !confirmPassword()
+            "
+          >
+            {{
+              passwordLoading()
+                ? 'Guardando...'
+                : 'Restablecer contraseña'
+            }}
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+
+  <!-- CONFIRMAR DESACTIVACIÓN -->
+
+  @if (deactivateTarget(); as user) {
+
+    <div class="modal-backdrop">
+
+      <section class="confirm-modal">
+
+        <div class="modal-header">
+
+          <div>
+
+            <h2>
+              Desactivar usuario
+            </h2>
+
+            <p>
+              Este usuario dejará de poder iniciar sesión en el sistema.
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cancelDeactivateUser()"
+            [disabled]="actionUserId() === user.id"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <p class="confirm-name">
+          {{ user.displayName }}
+        </p>
+
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelDeactivateUser()"
+            [disabled]="actionUserId() === user.id"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-danger"
+            (click)="confirmDeactivateUser()"
+            [disabled]="actionUserId() === user.id"
+          >
+            {{
+              actionUserId() === user.id
+                ? 'Procesando...'
+                : 'Desactivar'
+            }}
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+</main>

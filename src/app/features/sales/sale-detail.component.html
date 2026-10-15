@@ -1,0 +1,1303 @@
+<main class="sale-page">
+
+  @if (loading()) {
+    <section class="state-message">
+      Cargando cuenta...
+    </section>
+  }
+
+  @if (error()) {
+    <section class="state-message error">
+      {{ error() }}
+    </section>
+  }
+
+  @if (sale()) {
+
+    <nav class="sale-mobile-nav">
+
+      <button
+        type="button"
+        class="sale-mobile-tab"
+        [class.active]="
+      mobilePanel() === 'accounts'
+    "
+        (click)="
+      showMobilePanel('accounts')
+    "
+      >
+        Cuentas
+      </button>
+
+      <button
+        type="button"
+        class="sale-mobile-tab"
+        [class.active]="
+      mobilePanel() === 'catalog'
+    "
+        (click)="
+      showMobilePanel('catalog')
+    "
+      >
+        Productos
+      </button>
+
+      <button
+        type="button"
+        class="sale-mobile-tab"
+        [class.active]="
+      mobilePanel() === 'order'
+    "
+        (click)="
+      showMobilePanel('order')
+    "
+      >
+
+        Pedido
+
+        @if (
+          sale()!.items.length > 0
+          ) {
+          <span class="mobile-count">
+        {{ sale()!.items.length }}
+      </span>
+        }
+
+      </button>
+
+    </nav>
+
+    <header class="sale-header">
+
+      <div>
+        <h1>
+          Cuenta #{{ sale()!.saleNumber }}
+        </h1>
+
+        @if (sale()!.reference) {
+          <p class="sale-reference">
+            {{ sale()!.reference }}
+          </p>
+        }
+      </div>
+
+      <div class="sale-total-header">
+        <span>Total</span>
+        <strong>
+          {{ sale()!.total | currency:'MXN' }}
+        </strong>
+      </div>
+
+    </header>
+
+    <section class="sale-layout">
+
+      <!-- CUENTAS ABIERTAS -->
+
+      <aside class="open-sales-panel" [class.mobile-panel-hidden]=" mobilePanel() !== 'accounts'">
+
+        <div class="section-title open-sales-title">
+
+          <div>
+            <h2>
+              Cuentas abiertas
+            </h2>
+
+            <span class="section-subtitle">
+              {{ otherOpenSales().length + 1 }}
+                      activas
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-primary new-sale-button"
+          (click)="startNewSale()"
+        >
+          + Nueva cuenta
+        </button>
+
+        <div class="open-sales-list">
+
+          @for (account of openSales(); track account.id) {
+
+            <button
+              type="button"
+              class="open-sale-card"
+              [class.active]="account.id === currentSaleId()" (click)="openSale(account.id)">
+
+              <div class="open-sale-main">
+
+                <strong>
+                  Cuenta #{{ account.saleNumber }}
+                </strong>
+
+                @if (account.id === currentSaleId()) {
+                  <span class="badge badge-success">
+                    Actual
+                  </span>
+                } @else {
+                  <span class="badge badge-neutral">
+                    Abierta
+                  </span>
+                }
+
+              </div>
+
+              @if (account.reference) {
+                <span class="open-sale-reference">
+                  {{ account.reference }}
+                </span>
+              }
+
+              <div class="open-sale-footer">
+
+                <span>
+                  {{
+                    account.id === currentSaleId()
+                      ? sale()!.items.length + ' partidas'
+                      : 'Cambiar'
+                  }}
+                </span>
+
+                <strong>
+                  {{
+                    account.total
+                      | currency:'MXN'
+                  }}
+                </strong>
+
+              </div>
+
+            </button>
+
+          }
+
+        </div>
+
+      </aside>
+
+      <!-- CUENTA -->
+      <section class="sale-items-panel" [class.mobile-panel-hidden]=" mobilePanel() !== 'order'">
+
+        <div class="section-title">
+          <h2>Cuenta</h2>
+
+          <span>
+            {{ sale()!.items.length }}
+            partidas
+          </span>
+        </div>
+
+        @if (sale()!.items.length === 0) {
+
+          <div class="empty-state">
+            Todavía no hay productos en esta cuenta.
+          </div>
+
+        }
+
+        @for (
+          item of sale()!.items;
+          track item.id
+          ) {
+
+          <article class="sale-item-card">
+
+            <div class="sale-item-main">
+
+              <div>
+                <strong class="product-name">
+                  {{ item.productName }}
+                </strong>
+
+                <span class="presentation-name">
+                  {{ item.presentationName }}
+                </span>
+              </div>
+
+              <strong class="line-total">
+                {{ item.lineTotal | currency:'MXN' }}
+              </strong>
+
+            </div>
+
+            <div class="sale-item-detail">
+
+              <span>
+                Cantidad:
+                <strong>
+                  <div class="quantity-controls">
+                    <button
+                      type="button"
+                      (click)="decreaseQuantity(item)"
+                    >
+                      −
+                    </button>
+
+                    <strong>
+                      {{ item.quantity }}
+                    </strong>
+
+                    <button
+                      type="button"
+                      (click)="increaseQuantity(item)"
+                    >
+                      +
+                    </button>
+
+                  </div>
+                </strong>
+
+              </span>
+
+              <span>
+                Precio:
+                <strong>
+                  {{ item.unitPrice | currency:'MXN' }}
+                </strong>
+              </span>
+
+              @if (item.discountType !== 'NONE') {
+
+                <div class="discount-info">
+
+                  Descuento:
+
+                  @if (item.discountType === 'PERCENT') {
+                    {{ item.discountValue }}%
+                  }
+
+                  @if (item.discountType === 'AMOUNT') {
+                    {{ item.discountValue | currency:'MXN' }}
+                  }
+
+                  <strong>
+                    (-{{ item.discountAmount | currency:'MXN' }})
+                  </strong>
+
+                </div>
+              }
+
+              @if (item.courtesy) {
+
+                <div class="courtesy-info">
+                  CORTESÍA
+                </div>
+              }
+
+            </div>
+
+            <div class="item-actions">
+
+              @if (editingItemId() !== item.id) {
+
+                <button
+                  type="button"
+                  class="item-action-main"
+                  (click)="startEditItem(item)"
+                >
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  (click)="startDiscount(item)"
+                  [disabled]="itemCommercialActionLoading()"
+                >
+                  Descuento
+                </button>
+
+                <button
+                  type="button"
+                  (click)="toggleCourtesy(item)"
+                  [disabled]="itemCommercialActionLoading()"
+                >
+                  {{
+                    item.courtesy
+                      ? 'Quitar cortesía'
+                      : 'Cortesía'
+                  }}
+                </button>
+
+                @if (otherOpenSales().length > 0) {
+
+                  <button
+                    type="button"
+                    (click)="startMoveItem(item)"
+                    [disabled]="itemCommercialActionLoading()"
+                  >
+                    Mover
+                  </button>
+
+                }
+
+                <button
+                  type="button"
+                  class="danger-button"
+                  (click)="removeItem(item)"
+                >
+                  Eliminar
+                </button>
+
+              }
+
+              @if (editingItemId() === item.id) {
+
+                <div class="edit-grid">
+
+                  <label>
+                    Cantidad
+
+                    <input
+                      type="number"
+                      [ngModel]="editingQuantity()"
+                      (ngModelChange)="editingQuantity.set($event)"
+                    >
+                  </label>
+
+                  <button
+                    type="button"
+                    (click)="saveItemQuantity(item)"
+                  >
+                    Guardar cantidad
+                  </button>
+
+                  <label>
+                    Precio
+
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      [ngModel]="editingPrice()"
+                      (ngModelChange)="editingPrice.set($event)"
+                    >
+                  </label>
+
+                  <button
+                    type="button"
+                    (click)="saveItemPrice(item)"
+                  >
+                    Guardar precio
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="cancelEditItem()"
+                  >
+                    Cancelar
+                  </button>
+
+                </div>
+
+              }
+
+              @if (discountItemId() === item.id) {
+
+                <div class="discount-editor">
+
+                  <label>
+                    Tipo de descuento
+
+                    <select
+                      [ngModel]="discountType()"
+                      (ngModelChange)="discountType.set($event)"
+                    >
+                      <option value="PERCENT">
+                        Porcentaje
+                      </option>
+
+                      <option value="AMOUNT">
+                        Importe
+                      </option>
+                    </select>
+                  </label>
+
+                  <label>
+
+                    @if (discountType() === 'PERCENT') {
+                      Porcentaje
+                    } @else {
+                      Importe
+                    }
+
+                    <input
+                      type="number"
+                      min="0"
+                      [max]="discountType() === 'PERCENT' ? 100 : null"
+                      [step]="discountType() === 'PERCENT' ? 1 : 0.01"
+                      [ngModel]="discountValue()"
+                      (ngModelChange)="discountValue.set($event)"
+                    >
+
+                  </label>
+
+                  @if (discountError()) {
+
+                    <p class="input-error">
+                      {{ discountError() }}
+                    </p>
+
+                  }
+
+                  <div class="discount-actions">
+
+                    <button
+                      type="button"
+                      class="primary-button"
+                      (click)="applyDiscount(item)"
+                      [disabled]="itemCommercialActionLoading()"
+                    >
+                      Aplicar
+                    </button>
+
+                    @if (item.discountType !== 'NONE') {
+
+                      <button
+                        type="button"
+                        (click)="removeDiscount(item)"
+                        [disabled]="itemCommercialActionLoading()"
+                      >
+                        Quitar descuento
+                      </button>
+
+                    }
+
+                    <button
+                      type="button"
+                      (click)="cancelDiscount()"
+                      [disabled]="itemCommercialActionLoading()"
+                    >
+                      Cancelar
+                    </button>
+
+                  </div>
+
+                </div>
+
+              }
+
+            </div>
+
+            @if (movingItemId() === item.id) {
+
+              <section class="move-item-panel">
+
+                <div class="move-item-header">
+                  <div>
+                    <strong>Mover partida</strong>
+
+                    <span>
+          {{ item.productName }}
+        </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="move-close-button"
+                    (click)="cancelMoveItem()"
+                    [disabled]="itemCommercialActionLoading()"
+                    aria-label="Cancelar movimiento"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div class="move-current-info">
+
+                  <div>
+                    <span>Cantidad disponible</span>
+                    <strong>
+                      {{ item.quantity }}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Importe de la partida</span>
+                    <strong>
+                      {{ item.lineTotal | currency:'MXN' }}
+                    </strong>
+                  </div>
+
+                </div>
+
+                <label class="move-field">
+                  <span>Cuenta destino</span>
+
+                  <select
+                    [ngModel]="selectedTargetSaleId()"
+                    (ngModelChange)="selectedTargetSaleId.set($event)"
+                    [disabled]="itemCommercialActionLoading()"
+                  >
+                    <option [ngValue]="null">
+                      Selecciona una cuenta
+                    </option>
+
+                    @for (
+                      targetSale of otherOpenSales();
+                      track targetSale.id
+                      ) {
+                      <option [value]="targetSale.id">
+                        Cuenta #{{ targetSale.saleNumber }}
+                        @if (targetSale.reference) {
+                          - {{ targetSale.reference }}
+                        }
+                      </option>
+                    }
+                  </select>
+                </label>
+
+                @if (item.discountType !== 'AMOUNT') {
+
+                  <label class="move-field">
+                    <span>Cantidad a mover</span>
+
+                    <input
+                      type="number"
+                      min="0"
+                      [max]="item.quantity"
+                      step="0.001"
+                      [ngModel]="splitQuantity()"
+                      (ngModelChange)="splitQuantity.set($event)"
+                      [disabled]="itemCommercialActionLoading()"
+                    >
+                  </label>
+
+                  <p class="move-help">
+                    Déjalo vacío si quieres mover la partida completa.
+                  </p>
+
+                } @else {
+
+                  <div class="move-warning">
+                    Esta partida tiene un descuento fijo.
+                    Solo puede moverse completa.
+                  </div>
+
+                }
+
+                @if (moveError()) {
+                  <p class="move-error">
+                    {{ moveError() }}
+                  </p>
+                }
+
+                <div class="move-item-actions">
+
+                  <button
+                    type="button"
+                    class="primary-button"
+                    (click)="moveWholeItem(item)"
+                    [disabled]="
+                      !selectedTargetSaleId() ||
+                      itemCommercialActionLoading()
+                    "
+                  >
+                    @if (itemCommercialActionLoading()) {
+                      Procesando...
+                    } @else {
+                      Mover completa
+                    }
+                  </button>
+
+                  @if (item.discountType !== 'AMOUNT') {
+
+                    <button
+                      type="button"
+                      (click)="movePartialItem(item)"
+                      [disabled]="
+                        !selectedTargetSaleId() ||
+                        splitQuantity() === null ||
+                        itemCommercialActionLoading()
+                      "
+                    >
+                      Mover cantidad
+                    </button>
+
+                  }
+
+                  <button
+                    type="button"
+                    (click)="cancelMoveItem()"
+                    [disabled]="itemCommercialActionLoading()"
+                  >
+                    Cancelar
+                  </button>
+
+                </div>
+
+              </section>
+            }
+
+          </article>
+
+        }
+
+        <section class="customer-section">
+
+          <div class="customer-section-header">
+            <div>
+              <span class="customer-section-label">
+                Cliente
+              </span>
+
+              @if (currentCustomer()) {
+
+                <strong class="customer-section-name">
+                  {{ currentCustomer()!.name }}
+                </strong>
+
+              } @else {
+
+                <strong class="customer-section-name">
+                  Público general
+                </strong>
+
+              }
+            </div>
+
+            @if (currentCustomer()) {
+
+              <button
+                type="button"
+                class="customer-change-button"
+                (click)="startCustomerSelection()"
+                [disabled]="customerLoading()"
+              >
+                Cambiar
+              </button>
+
+            } @else {
+
+              <button
+                type="button"
+                class="customer-change-button"
+                (click)="startCustomerSelection()"
+              >
+                Asignar
+              </button>
+
+            }
+
+          </div>
+
+
+          @if (currentCustomer()) {
+
+            <div class="customer-selected">
+
+              <div class="customer-selected-info">
+
+                @if (currentCustomer()!.phone) {
+                  <span>
+            {{ currentCustomer()!.phone }}
+          </span>
+                }
+
+                <div class="customer-tags">
+
+                  @if (currentCustomer()!.wholesale) {
+                    <span class="customer-tag">
+              Mayorista
+            </span>
+                  }
+
+                  @if (currentCustomer()!.frequent) {
+                    <span class="customer-tag">
+              Frecuente
+            </span>
+                  }
+
+                </div>
+
+              </div>
+
+              <div class="customer-actions">
+
+                <button
+                  type="button"
+                  (click)="viewCustomerAccount()"
+                >
+                  Ver cuenta
+                </button>
+
+                <button
+                  type="button"
+                  class="customer-remove-button"
+                  (click)="removeCustomer()"
+                  [disabled]="customerLoading()"
+                >
+                  Quitar cliente
+                </button>
+
+              </div>
+
+            </div>
+
+          }
+
+
+          @if (showCustomerSelector()) {
+
+            <div class="customer-selector">
+
+              <label>
+                Seleccionar cliente
+
+                <select
+                  [ngModel]="selectedCustomerId()"
+                  (ngModelChange)="selectedCustomerId.set($event)"
+                >
+
+                  <option [ngValue]="null">
+                    Selecciona un cliente
+                  </option>
+
+                  @for (
+                    customer of customers();
+                    track customer.id
+                    ) {
+
+                    <option [value]="customer.id">
+                      {{ customer.name }}
+                    </option>
+
+                  }
+
+                </select>
+              </label>
+
+              @if (customerError()) {
+
+                <p class="input-error">
+                  {{ customerError() }}
+                </p>
+
+              }
+
+              <div class="customer-actions">
+
+                <button
+                  type="button"
+                  class="primary-button"
+                  (click)="assignCustomer()"
+                  [disabled]="customerLoading()"
+                >
+                  {{
+                    customerLoading()
+                      ? 'Guardando...'
+                      : 'Asignar'
+                  }}
+                </button>
+
+                <button
+                  type="button"
+                  (click)="cancelCustomerSelection()"
+                  [disabled]="customerLoading()"
+                >
+                  Cancelar
+                </button>
+
+              </div>
+
+            </div>
+
+          }
+
+        </section>
+
+        <footer class="sale-summary">
+
+          <div>
+            <span>Subtotal</span>
+            <strong>
+              {{ sale()!.subtotal | currency:'MXN' }}
+            </strong>
+          </div>
+
+          @if (sale()!.saleDiscountAmount > 0) {
+
+            <div>
+              <span>
+                Descuento general
+              </span>
+
+              <strong>
+                -{{ sale()!.saleDiscountAmount | currency:'MXN' }}
+              </strong>
+            </div>
+
+          }
+
+          <div class="total-row">
+            <span>Total</span>
+            <strong>
+              {{ sale()!.total | currency:'MXN' }}
+            </strong>
+          </div>
+
+          <div class="sale-main-actions">
+
+            <button
+              type="button"
+              class="checkout-button"
+              (click)="startPayment()"
+            >
+              Cobrar
+            </button>
+
+            <button
+              type="button"
+              class="sale-secondary-action"
+              (click)="startSaleDiscount()"
+            >
+              Descuento a cuenta
+            </button>
+
+          </div>
+
+          <button
+            type="button"
+            class="cancel-sale-button"
+            (click)="startCancelSale()"
+            [disabled]="cancellingSale()"
+          >
+            Cancelar cuenta
+          </button>
+
+          @if (sale()!.saleDiscountType !== 'NONE') {
+
+            <button
+              type="button"
+              class="primary-button"
+              (click)="removeSaleDiscount()"
+              [disabled]="saleDiscountLoading()"
+            >
+              Quitar descuento general
+            </button>
+
+          }
+
+          @if (showSaleDiscount()) {
+
+            <section class="discount-editor">
+
+              <h3>
+                Descuento a la cuenta
+              </h3>
+
+              <label>
+                Tipo
+
+                <select
+                  [ngModel]="saleDiscountType()"
+                  (ngModelChange)="saleDiscountType.set($event)"
+                >
+                  <option value="PERCENT">
+                    Porcentaje
+                  </option>
+
+                  <option value="AMOUNT">
+                    Importe
+                  </option>
+                </select>
+              </label>
+
+              <label>
+
+                @if (saleDiscountType() === 'PERCENT') {
+                  Porcentaje
+                } @else {
+                  Importe
+                }
+
+                <input
+                  type="number"
+                  min="0"
+                  [max]="
+          saleDiscountType() === 'PERCENT'
+            ? 100
+            : null
+        "
+                  [step]="
+          saleDiscountType() === 'PERCENT'
+            ? 1
+            : 0.01
+        "
+                  [ngModel]="saleDiscountValue()"
+                  (ngModelChange)="saleDiscountValue.set($event)"
+                >
+
+              </label>
+
+              @if (saleDiscountError()) {
+                <p class="input-error">
+                  {{ saleDiscountError() }}
+                </p>
+              }
+
+              <div class="discount-actions">
+
+                <button
+                  type="button"
+                  class="primary-button"
+                  (click)="applySaleDiscount()"
+                  [disabled]="saleDiscountLoading()"
+                >
+                  Aplicar
+                </button>
+
+                <button
+                  type="button"
+                  (click)="cancelSaleDiscount()"
+                  [disabled]="saleDiscountLoading()"
+                >
+                  Cancelar
+                </button>
+
+              </div>
+
+            </section>
+          }
+
+          @if (cancelSaleError()) {
+            <p class="input-error">
+              {{ cancelSaleError() }}
+            </p>
+          }
+
+          @if (sale()!.customerId) {
+
+            <button
+              type="button"
+              (click)="closeAsCredit()"
+            >
+              Cerrar a crédito
+            </button>
+
+            @if (showCreditClose()) {
+
+              <app-sale-credit-close
+                [saleId]="sale()!.id"
+                [total]="sale()!.total"
+                (closed)="onCreditClosed($event)"
+                (cancelled)="cancelCreditClose()"
+              />
+
+            }
+
+          }
+
+          @if (creditError()) {
+            <p class="input-error">
+              {{ creditError() }}
+            </p>
+          }
+
+        </footer>
+
+        @if (showCancelSale()) {
+
+          <section class="discount-editor">
+
+            <h3>
+              Cancelar cuenta
+            </h3>
+
+            <p>
+              La cuenta quedará cancelada y no podrá modificarse después.
+            </p>
+
+            <label>
+              Motivo de cancelación
+
+              <textarea
+                rows="3"
+                maxlength="200"
+                [ngModel]="cancelReason()"
+                (ngModelChange)="cancelReason.set($event)"
+                [disabled]="cancellingSale()"
+              ></textarea>
+            </label>
+
+            @if (cancelSaleError()) {
+              <p class="input-error">
+                {{ cancelSaleError() }}
+              </p>
+            }
+
+            <div class="discount-actions">
+
+              <button
+                type="button"
+                class="danger-button"
+                (click)="confirmCancelSale()"
+                [disabled]="cancellingSale()"
+              >
+                {{
+                  cancellingSale()
+                    ? 'Cancelando...'
+                    : 'Confirmar cancelación'
+                }}
+              </button>
+
+              <button
+                type="button"
+                (click)="closeCancelSale()"
+                [disabled]="cancellingSale()"
+              >
+                Volver
+              </button>
+
+            </div>
+
+          </section>
+
+        }
+
+        @if (showPayment()) {
+          <app-sale-payment
+            [saleId]="sale()!.id"
+            [total]="sale()!.total"
+            (paid)="onSalePaid($event)"
+            (cancelled)="cancelPayment()"
+          />
+        }
+      </section>
+
+      <!-- CATÁLOGO -->
+      <section class="catalog-panel"  [class.mobile-panel-hidden]=" mobilePanel() !== 'catalog'">
+
+        <div class="section-title">
+          <h2>Catálogo</h2>
+        </div>
+
+        <div class="categories">
+
+          <button
+            type="button"
+            class="category-button"
+            [class.active]="selectedCategoryId() === null"
+            (click)="selectCategory(null)"
+          >
+            Todos
+          </button>
+
+          @for (
+            category of categories();
+            track category.id
+            ) {
+
+            <button
+              type="button"
+              class="category-button"
+              [class.active]="
+                selectedCategoryId() === category.id
+              "
+              (click)="selectCategory(category.id)"
+            >
+              {{ category.name }}
+            </button>
+
+          }
+
+        </div>
+
+        <div class="products-grid">
+
+          @for (
+            product of visibleProducts();
+            track product.id
+            ) {
+
+            <button
+              type="button"
+              class="product-button"
+              [class.active]="
+                selectedProduct()?.id === product.id
+              "
+              (click)="selectProduct(product)"
+            >
+              {{ product.name }}
+            </button>
+
+          }
+
+        </div>
+
+        @if (selectedProduct()) {
+
+          <section class="presentations">
+
+            <h3>
+              {{ selectedProduct()!.name }}
+            </h3>
+
+            <div class="presentations-grid">
+
+              @for (
+                presentation of presentations();
+                track presentation.id
+                ) {
+
+                <button
+                  type="button"
+                  class="presentation-button"
+                  (click)="addPresentation(presentation)"
+                  [disabled]="addingItem()"
+                >
+
+                  <span>
+                    {{ presentation.name }}
+                  </span>
+
+                  @if (!presentation.openPrice) {
+                    <strong>
+                      {{ presentation.salePrice | currency:'MXN' }}
+                    </strong>
+                  }
+
+                  @if (presentation.openPrice) {
+                    <strong>
+                      Precio abierto
+                    </strong>
+                  }
+
+                </button>
+
+              }
+
+            </div>
+
+          </section>
+
+        }
+
+        @if (pendingPresentation()) {
+
+          <section class="pending-item">
+
+            <h3>
+              {{ pendingPresentation()!.name }}
+            </h3>
+
+            @if (
+              pendingPresentation()!.variableQuantity
+              ) {
+
+              <label>
+                Cantidad
+              </label>
+
+              <input
+                type="number"
+                [step]="
+                  quantityStep(
+                    pendingPresentation()!.unit.decimalPlaces
+                  )
+                "
+                [min]="
+                  pendingPresentation()!.minimumQuantity
+                  ?? quantityStep(
+                       pendingPresentation()!.unit.decimalPlaces
+                     )
+                "
+                [ngModel]="pendingQuantity()"
+                (ngModelChange)="pendingQuantity.set($event)"
+              >
+
+            }
+
+            @if (
+              pendingPresentation()!.openPrice
+              ) {
+
+              <label>
+                Precio
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                [ngModel]="pendingPrice()"
+                (ngModelChange)="pendingPrice.set($event)"
+              >
+
+            }
+
+            @if (itemInputError()) {
+              <p class="input-error">
+                {{ itemInputError() }}
+              </p>
+            }
+
+            <div class="pending-actions">
+
+              <button
+                type="button"
+                class="primary-button"
+                (click)="confirmPresentation()"
+                [disabled]="addingItem()"
+              >
+                {{
+                  addingItem()
+                    ? 'Agregando...'
+                    : 'Agregar'
+                }}
+              </button>
+
+              <button
+                type="button"
+                class="secondary-button"
+                (click)="cancelPendingPresentation()"
+                [disabled]="addingItem()"
+              >
+                Cancelar
+              </button>
+
+            </div>
+
+          </section>
+
+        }
+
+      </section>
+
+    </section>
+
+    @if (mobilePanel() !== 'order' && sale()!.items.length > 0) {
+
+      <button
+        type="button"
+        class="mobile-order-bar"
+        (click)="showMobilePanel('order')"
+      >
+
+        <span>
+          Ver pedido
+        </span>
+
+        <span class="mobile-order-summary">
+          {{ sale()!.items.length }}
+              {{
+                sale()!.items.length === 1
+                  ? 'partida'
+                  : 'partidas'
+              }}
+
+              ·
+
+          <strong>
+            {{ sale()!.total | currency:'MXN' }}
+          </strong>
+        </span>
+
+      </button>
+
+    }
+  }
+
+</main>

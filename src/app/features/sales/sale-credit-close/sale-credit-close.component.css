@@ -1,0 +1,104 @@
+.payment-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.payment-panel h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.payment-panel > div {
+  margin-bottom: 0.75rem;
+}
+
+.payment-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.payment-panel input,
+.payment-panel select {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.payment-panel input:focus,
+.payment-panel select:focus {
+  outline: none;
+  border-color: #666666;
+}
+
+.payment-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.75rem;
+
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+
+  border: 1px solid #e4e4e4;
+  border-radius: 8px;
+}
+
+.payment-row span {
+  font-weight: 600;
+}
+
+.payment-row strong {
+  white-space: nowrap;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.payment-actions button {
+  flex: 1;
+}
+
+.payment-panel button {
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.payment-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.primary-button {
+  font-weight: 600;
+}
+
+.input-error {
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .payment-row {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-actions {
+    flex-direction: column;
+  }
+}

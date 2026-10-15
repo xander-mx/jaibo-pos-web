@@ -1,0 +1,160 @@
+.customers-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: Arial, sans-serif;
+}
+
+.customers-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.customers-header h1 {
+  margin: 0 0 4px;
+}
+
+.customer-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.customer-search input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.customer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.customer-card {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 16px;
+  align-items: center;
+
+  padding: 16px 18px;
+
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customer-info strong {
+  font-size: 18px;
+}
+
+.customer-info span {
+  color: #666;
+}
+
+.customer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.customer-tags span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f1f1f1;
+  font-size: 12px;
+}
+
+.customer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.primary-button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.input-error {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fbeaea;
+}
+
+@media (max-width: 700px) {
+  .customers-page {
+    padding: 16px;
+  }
+
+  .customer-search {
+    flex-direction: column;
+  }
+
+  .customer-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.customer-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.customer-form {
+  margin-bottom: 24px;
+  padding: 20px;
+
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+}
+
+.customer-form h2 {
+  margin-top: 0;
+}
+
+.customer-form > label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.customer-form input[type='text'],
+.customer-form input[type='email'] {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.customer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 16px 0;
+}
+
+.customer-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.customer-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}

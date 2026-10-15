@@ -1,0 +1,638 @@
+<main>
+
+  <button
+    type="button"
+    class="btn btn-secondary"
+    (click)="goBack()">
+    Volver a compras
+  </button>
+
+  @if (loading()) {
+
+    <p>
+      Cargando...
+    </p>
+
+  }
+
+  @if (error()) {
+
+    <p class="error">
+      {{ error() }}
+    </p>
+
+  }
+
+  @if (purchase(); as purchase) {
+
+    <header class="purchase-header">
+
+      <div>
+
+        <h1>
+          Compra
+        </h1>
+
+        <p>
+          {{
+            purchase.supplierName
+            || 'Sin proveedor'
+          }}
+        </p>
+
+      </div>
+
+      <div>
+
+        <div>
+          @switch (purchase.status) {
+            @case ('DRAFT') {
+              <span class="status-badge neutral">
+                Borrador
+              </span>
+            }
+
+            @case ('RECEIVED') {
+              <span class="status-badge success">
+                Recibida
+              </span>
+            }
+
+            @case ('CANCELLED') {
+              <span class="status-badge danger">
+                Cancelada
+              </span>
+            }
+          }
+        </div>
+
+      </div>
+
+    </header>
+
+    <section class="summary-card">
+
+      <div>
+        <span>Total</span>
+        <strong class="money-value">
+          {{
+            purchase.total | currency:'MXN'
+          }}
+        </strong>
+      </div>
+
+      <div>
+        <span>Pagado</span>
+        <strong class="money-value">
+          {{
+            purchase.paidAmount | currency:'MXN'
+          }}
+        </strong>
+      </div>
+
+      <div>
+        <span>Pendiente</span>
+        <strong
+          class="money-value"
+          [class.pending-value]="purchase.status !== 'DRAFT' && purchase.pendingBalance > 0">
+          {{ purchase.pendingBalance | currency:'MXN' }}
+        </strong>
+      </div>
+
+      <div>
+        <span>Estado de pago</span>
+
+        <strong>
+          @if (purchase.status === 'DRAFT') {
+            <span class="payment-status neutral">
+              No finalizada
+            </span>
+          } @else {
+            @switch (purchase.paymentStatus) {
+              @case ('PENDING') {
+                <span class="payment-status pending">
+                  Pendiente
+                </span>
+              }
+
+              @case ('PARTIALLY_PAID') {
+                <span class="payment-status partial">
+                  Parcial
+                </span>
+              }
+
+              @case ('PAID') {
+                <span class="payment-status paid">
+                  Pagada
+                </span>
+              }
+            }
+          }
+        </strong>
+      </div>
+    </section>
+
+    <section class="items-section">
+
+      <h2>
+        Partidas
+      </h2>
+
+      @if (purchase.status === 'DRAFT') {
+
+        <section class="add-item-card">
+
+          <h3>
+            Agregar partida
+          </h3>
+
+          <div class="add-item-grid">
+
+            <label>
+              Producto
+
+              <select
+                [ngModel]="productId()"
+                (ngModelChange)="productId.set($event); addItemError.set('')"
+              >
+
+                <option value="">
+                  Selecciona un producto
+                </option>
+
+                @for (
+                  product of products();
+                  track product.id
+                  ) {
+
+                  <option
+                    [value]="product.id"
+                  >
+                    {{ product.name }}
+                  </option>
+
+                }
+
+              </select>
+
+            </label>
+
+            <label>
+              Cantidad
+
+              <input
+                type="number"
+                min="0.001"
+                step="0.001"
+                inputmode="decimal"
+                [ngModel]="quantity()"
+                (ngModelChange)="quantity.set($event); addItemError.set('')"
+              >
+
+            </label>
+
+            <label>
+              Costo unitario
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                inputmode="decimal"
+                [ngModel]="unitCost()"
+                (ngModelChange)="unitCost.set($event); addItemError.set('')"
+              >
+
+            </label>
+
+          </div>
+
+          @if (addItemError()) {
+
+            <p class="error">
+              {{ addItemError() }}
+            </p>
+
+          }
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="addItem()"
+            [disabled]="addingItem()"
+          >
+            {{
+              addingItem()
+                ? 'Agregando...'
+                : 'Agregar partida'
+            }}
+          </button>
+
+        </section>
+
+      }
+
+      @if (purchase.items.length === 0) {
+
+        <div class="empty-items">
+          Esta compra todavía no tiene partidas.
+        </div>
+
+      } @else {
+
+        <div class="table-wrapper">
+
+          <table class="items-table">
+
+            <thead>
+            <tr>
+              <th>Producto</th>
+
+              <th class="number-header">
+                Cantidad
+              </th>
+
+              <th class="money-header">
+                Costo unitario
+              </th>
+
+              <th class="money-header">
+                Subtotal
+              </th>
+
+              @if (purchase.status === 'DRAFT') {
+                <th class="actions-header">
+                  Acciones
+                </th>
+              }
+            </tr>
+            </thead>
+
+            <tbody>
+
+              @for (
+                item of purchase.items;
+                track item.id
+                ) {
+
+                <tr>
+
+                  <td class="product-cell">
+                    {{ item.productName }}
+                  </td>
+
+                  <td class="number-cell">
+                    {{ item.quantity }}
+                  </td>
+
+                  <td class="money-cell">
+                    {{
+                      item.unitCost
+                        | currency:'MXN'
+                    }}
+                  </td>
+
+                  <td class="money-cell">
+                    {{
+                      item.subtotal
+                        | currency:'MXN'
+                    }}
+                  </td>
+
+                  @if (purchase.status === 'DRAFT') {
+
+                    <td class="actions-cell">
+
+                      <button
+                        type="button"
+                        class="btn btn-secondary remove-button"
+                        (click)="removeItem(item.id)"
+                        [disabled]="removingItemId() === item.id"
+                      >
+                        {{
+                          removingItemId() === item.id
+                            ? 'Eliminando...'
+                            : 'Eliminar'
+                        }}
+                      </button>
+
+                    </td>
+
+                  }
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+        @if (itemActionError()) {
+          <p class="error">
+            {{ itemActionError() }}
+          </p>
+        }
+
+      }
+
+
+      @if (purchase.status === 'DRAFT') {
+
+        <div class="receive-actions">
+
+          <div class="receive-message">
+
+            @if (purchase.items.length === 0) {
+              <span>
+                Agrega al menos una partida para recibir la compra.
+              </span>
+            }
+
+            @if (receiveError()) {
+              <p class="error">
+                {{ receiveError() }}
+              </p>
+            }
+
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="receivePurchase()"
+            [disabled]="
+              receiving()
+              || purchase.items.length === 0
+            "
+          >
+            {{
+              receiving()
+                ? 'Recibiendo...'
+                : 'Recibir compra'
+            }}
+          </button>
+
+        </div>
+
+      }
+
+    </section>
+
+    @if (
+      purchase.status === 'RECEIVED'
+      && purchase.pendingBalance > 0
+      ) {
+
+      <button
+        type="button"
+        class="btn btn-primary payment-button"
+        (click)="openPaymentForm()"
+      >
+        Registrar pago
+      </button>
+
+    }
+
+    @if (showPaymentForm()) {
+      <div class="modal-backdrop">
+        <section class="payment-modal">
+          <div class="payment-modal-header">
+            <div class="payment-modal-heading">
+              <h3 class="payment-modal-title">Registrar pago</h3>
+              <p class="payment-modal-subtitle">
+                Saldo pendiente:
+                <strong>{{
+                    purchase.pendingBalance | currency:'MXN':'MX$':'1.2-2':'es-MX'
+                  }}</strong>
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="payment-modal-close"
+              [disabled]="paymentLoading()"
+              (click)="cancelPayment()"
+              aria-label="Cerrar modal"
+              title="Cerrar"
+            >
+              ×
+            </button>
+          </div>
+
+          <div class="payment-fields">
+
+            <label>
+              <span>Método</span>
+
+              <select
+                [ngModel]="paymentMethod()"
+                (ngModelChange)="changePaymentMethod($event)"
+                [disabled]="paymentLoading()"
+              >
+                <option value="CASH">
+                  Efectivo
+                </option>
+
+                <option value="TRANSFER">
+                  Transferencia
+                </option>
+
+                <option value="CARD">
+                  Tarjeta
+                </option>
+              </select>
+            </label>
+
+
+            <label>
+              <span>Origen</span>
+
+              <select
+                [ngModel]="paymentSource()"
+                (ngModelChange)="paymentSource.set($event)"
+                [disabled]="paymentLoading()"
+              >
+                <option value="CASH_REGISTER">
+                  Caja
+                </option>
+
+                <option value="EXTERNAL">
+                  Externo
+                </option>
+              </select>
+            </label>
+
+
+            <label>
+              <span>Importe</span>
+
+              <div class="money-input">
+            <span class="money-prefix">
+              MX$
+            </span>
+
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  inputmode="decimal"
+                  [max]="purchase.pendingBalance"
+                  [ngModel]="paymentAmount()"
+                  (ngModelChange)="paymentAmount.set($event)"
+                  [disabled]="paymentLoading()"
+                  placeholder="0.00"
+                >
+              </div>
+            </label>
+
+          </div>
+
+
+          @if (paymentError()) {
+            <p class="error">
+              {{ paymentError() }}
+            </p>
+          }
+
+
+          <div class="modal-actions">
+
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="cancelPayment()"
+              [disabled]="paymentLoading()"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="registerPayment()"
+              [disabled]="!canRegisterPayment()"
+            >
+              {{
+                paymentLoading()
+                  ? 'Registrando...'
+                  : 'Registrar pago'
+              }}
+            </button>
+
+          </div>
+
+        </section>
+
+      </div>
+
+    }
+
+    @if (purchase.note) {
+
+      <section class="note-card">
+        <strong>
+          Nota
+        </strong>
+
+        <p>
+          {{ purchase.note }}
+        </p>
+
+      </section>
+    }
+
+    <section class="payments-section">
+
+      <h2>Pagos</h2>
+
+      @if (purchase.payments.length === 0) {
+
+        <p>
+          No hay pagos registrados.
+        </p>
+
+      } @else {
+
+        <table>
+
+          <thead>
+          <tr>
+            <th>Método</th>
+            <th>Origen</th>
+            <th  class="money-header">Importe</th>
+            <th>Fecha</th>
+          </tr>
+          </thead>
+
+          <tbody>
+
+            @for (
+              payment of purchase.payments;
+              track payment.id
+              ) {
+
+              <tr>
+
+                <td>
+                  @switch (payment.paymentMethod) {
+
+                    @case ('CASH') {
+                      Efectivo
+                    }
+
+                    @case ('TRANSFER') {
+                      Transferencia
+                    }
+
+                    @case ('CARD') {
+                      Tarjeta
+                    }
+
+                  }
+                </td>
+
+                <td>
+                  @switch (payment.paymentSource) {
+
+                    @case ('CASH_REGISTER') {
+                      Caja
+                    }
+
+                    @case ('EXTERNAL') {
+                      Externo
+                    }
+
+                  }
+                </td>
+
+                <td class="money-cell">
+                  {{
+                    payment.amount
+                      | currency:'MXN'
+                  }}
+                </td>
+
+                <td>
+                  {{
+                    payment.paidAt
+                      | date:'d MMM yyyy, h:mm a':'':'es-MX'
+                  }}
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      }
+
+    </section>
+  }
+
+</main>

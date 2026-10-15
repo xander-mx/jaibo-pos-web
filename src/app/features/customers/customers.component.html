@@ -1,0 +1,304 @@
+<main class="customers-page">
+
+  <header class="customers-header">
+
+    <button
+      type="button"
+      (click)="goBack()"
+    >
+      Volver
+    </button>
+
+    <div>
+      <h1>Clientes</h1>
+      <span>
+        Consulta y administra las cuentas de clientes
+      </span>
+    </div>
+
+  </header>
+
+  <section class="customer-search">
+
+    <div class="customer-toolbar">
+
+      @if (!showCreate()) {
+
+        <button
+          type="button"
+          class="primary-button"
+          (click)="saveCustomer()"
+          [disabled]="createLoading()"
+        >
+          {{
+            createLoading()
+              ? 'Guardando...'
+              : editingCustomerId()
+                ? 'Guardar cambios'
+                : 'Guardar cliente'
+          }}
+        </button>
+
+      }
+
+    </div>
+
+    @if (showCreate()) {
+
+      <section class="customer-form">
+
+        <h2>
+          {{
+            editingCustomerId()
+              ? 'Editar cliente'
+              : 'Nuevo cliente'
+          }}
+        </h2>
+
+        <label>
+          Nombre
+
+          <input
+            type="text"
+            maxlength="120"
+            [ngModel]="newCustomerName()"
+            (ngModelChange)="newCustomerName.set($event)"
+          >
+        </label>
+
+        <label>
+          Teléfono
+
+          <input
+            type="text"
+            maxlength="30"
+            [ngModel]="newCustomerPhone()"
+            (ngModelChange)="newCustomerPhone.set($event)"
+          >
+        </label>
+
+        <label>
+          Correo
+
+          <input
+            type="email"
+            maxlength="254"
+            [ngModel]="newCustomerEmail()"
+            (ngModelChange)="newCustomerEmail.set($event)"
+          >
+        </label>
+
+        <div class="customer-options">
+
+          <label>
+            <input
+              type="checkbox"
+              [ngModel]="newCustomerFrequent()"
+              (ngModelChange)="newCustomerFrequent.set($event)"
+            >
+
+            Frecuente
+          </label>
+
+          <label>
+            <input
+              type="checkbox"
+              [ngModel]="newCustomerWholesale()"
+              (ngModelChange)="newCustomerWholesale.set($event)"
+            >
+
+            Mayorista
+          </label>
+
+          <label>
+            <input
+              type="checkbox"
+              [ngModel]="newCustomerCreditEnabled()"
+              (ngModelChange)="newCustomerCreditEnabled.set($event)"
+            >
+
+            Crédito habilitado
+          </label>
+
+        </div>
+
+        @if (createError()) {
+
+          <p class="input-error">
+            {{ createError() }}
+          </p>
+
+        }
+
+        <div class="customer-form-actions">
+
+          <button
+            type="button"
+            class="primary-button"
+            (click)="saveCustomer()"
+            [disabled]="createLoading()"
+          >
+            {{
+              createLoading()
+                ? 'Guardando...'
+                : 'Guardar cliente'
+            }}
+          </button>
+
+          <button
+            type="button"
+            (click)="cancelCreate()"
+            [disabled]="createLoading()"
+          >
+            Cancelar
+          </button>
+
+        </div>
+
+      </section>
+
+    }
+
+    <input
+      type="search"
+      placeholder="Buscar cliente..."
+      [ngModel]="search()"
+      (ngModelChange)="search.set($event)"
+      (keyup.enter)="loadCustomers()"
+    >
+
+    <button
+      type="button"
+      class="primary-button"
+      (click)="loadCustomers()"
+      [disabled]="loading()"
+    >
+      Buscar
+    </button>
+
+    @if (search()) {
+
+      <button
+        type="button"
+        (click)="clearSearch()"
+        [disabled]="loading()"
+      >
+        Limpiar
+      </button>
+
+    }
+
+  </section>
+
+  @if (loading()) {
+
+    <p>
+      Cargando clientes...
+    </p>
+
+  }
+
+  @if (error()) {
+
+    <p class="input-error">
+      {{ error() }}
+    </p>
+
+  }
+
+  @if (
+    !loading() &&
+    !error() &&
+    customers().length === 0
+    ) {
+
+    <p>
+      No se encontraron clientes.
+    </p>
+
+  }
+
+  @if (
+    !loading() &&
+    !error()
+    ) {
+
+    <section class="customer-list">
+
+      @for (
+        customer of customers();
+        track customer.id
+        ) {
+
+        <article class="customer-card">
+
+          <div class="customer-info">
+
+            <strong>
+              {{ customer.name }}
+            </strong>
+
+            @if (customer.phone) {
+              <span>
+                {{ customer.phone }}
+              </span>
+            }
+
+            @if (customer.email) {
+              <span>
+                {{ customer.email }}
+              </span>
+            }
+
+          </div>
+
+          <div class="customer-tags">
+
+            @if (customer.wholesale) {
+              <span>
+                Mayorista
+              </span>
+            }
+
+            @if (customer.frequent) {
+              <span>
+                Frecuente
+              </span>
+            }
+
+            @if (customer.creditEnabled) {
+              <span>
+                Crédito
+              </span>
+            }
+
+          </div>
+
+          <div class="customer-actions">
+
+            <button
+              type="button"
+              class="primary-button"
+              (click)="viewAccount(customer)"
+            >
+              Cuentas por cobrar
+            </button>
+
+            <button
+              type="button"
+              (click)="startEdit(customer)"
+            >
+              Editar
+            </button>
+
+          </div>
+
+        </article>
+
+      }
+
+    </section>
+
+  }
+
+</main>
