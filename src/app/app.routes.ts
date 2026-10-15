@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './features/login/login.component';
-import { authGuard } from './core/auth/auth.guard';
-import { adminGuard } from './core/auth/admin.guard';
+import { LoginComponent } from '@features/login/login.component';
+import { authGuard } from '@core/auth/auth.guard';
+import { adminGuard } from '@core/auth/admin.guard';
+import { terminalGuard } from '@core/config/terminal.guard';
 
 export const routes: Routes = [
   {
@@ -9,13 +10,21 @@ export const routes: Routes = [
     component: LoginComponent,
   },
   {
-    path: 'sales',
+    path: 'terminal-setup',
     canActivate: [authGuard],
+    loadComponent: () =>
+      import('@features/terminal-setup/terminal-setup.component').then(
+        (m) => m.TerminalSetupComponent,
+      ),
+  },
+  {
+    path: 'sales',
+    canActivate: [authGuard, terminalGuard],
     loadComponent: () => import('./features/sales/sales.component').then((m) => m.SalesComponent),
   },
   {
     path: 'sales/:saleId',
-    canActivate: [authGuard],
+    canActivate: [authGuard, terminalGuard],
     loadComponent: () =>
       import('./features/sales/sale-detail.component').then((m) => m.SaleDetailComponent),
   },

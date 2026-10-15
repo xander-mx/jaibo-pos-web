@@ -1,0 +1,97 @@
+<main class="terminal-page">
+
+  <section class="terminal-card">
+
+    <div class="terminal-heading">
+      <h1>Configurar terminal</h1>
+
+      <p>
+        Selecciona la terminal que utilizará este dispositivo.
+      </p>
+    </div>
+
+    @if (error()) {
+      <div class="terminal-error">
+        {{ error() }}
+      </div>
+    }
+
+    @if (loading()) {
+      <p class="terminal-loading">
+        Cargando terminales...
+      </p>
+    } @else {
+
+      @if (terminals().length > 0) {
+
+        <div class="terminal-list">
+
+          @for (terminal of terminals(); track terminal.id) {
+            <button
+              type="button"
+              class="terminal-option"
+              (click)="selectTerminal(terminal)"
+            >
+              <div class="terminal-option__icon">
+                🖥️
+              </div>
+
+              <div class="terminal-option__content">
+                <span class="terminal-option__name">
+                  {{ terminal.name }}
+                </span>
+              </div>
+
+              <span class="terminal-option__arrow">
+                ›
+              </span>
+            </button>
+          }
+
+        </div>
+
+        <div class="terminal-divider">
+          <span>o registra este dispositivo</span>
+        </div>
+
+      }
+
+      <form
+        class="terminal-form"
+        (ngSubmit)="registerTerminal()"
+      >
+
+        <label>
+          <span>Nombre de la terminal</span>
+
+          <input
+            type="text"
+            name="terminalName"
+            [ngModel]="newTerminalName()"
+            (ngModelChange)="newTerminalName.set($event)"
+            placeholder="Ej. Tablet principal"
+            maxlength="120"
+            [disabled]="saving()"
+            required
+          />
+        </label>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="saving()"
+        >
+          {{
+            saving()
+              ? 'Registrando...'
+              : 'Registrar este dispositivo'
+          }}
+        </button>
+
+      </form>
+
+    }
+
+  </section>
+
+</main>

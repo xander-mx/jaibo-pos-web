@@ -65,6 +65,7 @@
           <a
             routerLink="/catalog"
             routerLinkActive="active"
+            (click)="closeMenu()"
           >
             Catálogo
           </a>
@@ -100,6 +101,14 @@
           <button
             type="button"
             class="btn btn-secondary"
+            (click)="changeTerminal()"
+          >
+            Cambiar terminal
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
             (click)="toggleTheme()"
           >
             {{
@@ -123,6 +132,15 @@
 
 
       <div class="header-actions">
+
+        <button
+          type="button"
+          class="terminal-button"
+          (click)="changeTerminal()"
+          title="Cambiar terminal"
+        >
+          Terminal
+        </button>
 
         <button
           type="button"

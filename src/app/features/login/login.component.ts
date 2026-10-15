@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@core/auth/auth.service';
 import { Router } from '@angular/router';
+import { TerminalService } from '@core/config/terminal.service';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +20,7 @@ export class LoginComponent {
 
   constructor(
     private readonly authService: AuthService,
+    private readonly terminalService: TerminalService,
     private readonly router: Router,
   ) {}
 
@@ -38,9 +40,29 @@ export class LoginComponent {
 
     this.authService.login(username, password).subscribe({
       next: () => {
-        this.loading.set(false);
+        const terminalId = this.terminalService.getTerminalId();
 
-        this.router.navigate(['/sales']);
+        if (!terminalId) {
+          this.loading.set(false);
+          this.router.navigate(['/terminal-setup']);
+          return;
+        }
+
+        this.terminalService.getCurrent().subscribe({
+          next: () => {
+            this.loading.set(false);
+            this.router.navigate(['/sales']);
+          },
+
+          error: (error) => {
+            console.warn('La terminal configurada ya no es válida', error);
+
+            this.terminalService.clear();
+            this.loading.set(false);
+
+            this.router.navigate(['/terminal-setup']);
+          },
+        });
       },
 
       error: (error) => {

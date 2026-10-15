@@ -68,4 +68,14 @@ export class App implements OnInit {
 
     this.router.navigate(['/login']);
   }
+
+  changeTerminal(): void {
+    this.menuOpen.set(false);
+
+    this.terminalService.clear();
+
+    this.realtimeService.disconnect();
+
+    this.router.navigate(['/terminal-setup']);
+  }
 }

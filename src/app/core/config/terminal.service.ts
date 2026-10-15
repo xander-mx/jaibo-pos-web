@@ -9,6 +9,22 @@ export interface CurrentTerminal {
   branchName: string;
 }
 
+export interface Terminal {
+  id: string;
+  branchId: string;
+  name: string;
+  active: boolean;
+  registeredByUserId: string;
+  registeredByName: string;
+  lastSeenAt: string;
+  createdAt: string;
+}
+
+export interface RegisterTerminalRequest {
+  name: string;
+  branchId?: string | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -30,5 +46,13 @@ export class TerminalService {
 
   getCurrent() {
     return this.http.get<CurrentTerminal>(`${API_BASE_URL}/terminals/current`);
+  }
+
+  findAll() {
+    return this.http.get<Terminal[]>(`${API_BASE_URL}/terminals`);
+  }
+
+  register(request: RegisterTerminalRequest) {
+    return this.http.post<Terminal>(`${API_BASE_URL}/terminals`, request);
   }
 }
