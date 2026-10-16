@@ -163,3 +163,60 @@
   font-weight: 600;
   color: var(--text-primary);
 }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.field__control {
+  width: 100%;
+  height: 44px;
+
+  padding: 0 14px;
+
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+
+  background: var(--surface-card);
+  color: var(--text-primary);
+
+  font: inherit;
+  font-size: 15px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.field__control:focus {
+  border-color: var(--jaibo-orange);
+  box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.12);
+}
+
+select.field__control {
+  appearance: none;
+  cursor: pointer;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 18px,
+    calc(100% - 13px) 18px;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+
+  padding-right: 40px;
+}

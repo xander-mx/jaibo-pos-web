@@ -61,10 +61,34 @@
         (ngSubmit)="registerTerminal()"
       >
 
+        @if (branches().length > 1) {
+          <label class="field">
+            <span class="field__label">Sucursal</span>
+
+            <select
+              class="field__control"
+              name="branchId"
+              [ngModel]="selectedBranchId()"
+              (ngModelChange)="selectedBranchId.set($event)"
+            >
+              <option [ngValue]="null">
+                Selecciona una sucursal
+              </option>
+
+              @for (branch of branches(); track branch.id) {
+                <option [value]="branch.id">
+                  {{ branch.name }}
+                </option>
+              }
+            </select>
+          </label>
+        }
+
         <label>
           <span>Nombre de la terminal</span>
 
           <input
+            class="field__control"
             type="text"
             name="terminalName"
             [ngModel]="newTerminalName()"

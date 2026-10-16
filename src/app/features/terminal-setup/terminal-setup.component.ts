@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { Terminal, TerminalService } from '@core/config/terminal.service';
+import { Branch, BranchService } from '@core/config/branch.service';
 
 @Component({
   selector: 'app-terminal-setup',
@@ -16,15 +17,18 @@ export class TerminalSetupComponent implements OnInit {
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal('');
-
   readonly newTerminalName = signal('');
+  readonly branches = signal<Branch[]>([]);
+  readonly selectedBranchId = signal<string | null>(null);
 
   constructor(
     private readonly terminalService: TerminalService,
+    private readonly branchService: BranchService,
     private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
+    this.loadBranches();
     this.loadTerminals();
   }
 
@@ -35,29 +39,57 @@ export class TerminalSetupComponent implements OnInit {
 
   registerTerminal(): void {
     const name = this.newTerminalName().trim();
+    const branchId = this.selectedBranchId();
 
     if (!name) {
       this.error.set('Captura un nombre para la terminal');
       return;
     }
 
+    if (!branchId) {
+      this.error.set('Selecciona una sucursal');
+      return;
+    }
+
     this.saving.set(true);
     this.error.set('');
 
-    this.terminalService.register({ name }).subscribe({
-      next: (terminal) => {
-        this.terminalService.setTerminalId(terminal.id);
-        this.saving.set(false);
+    this.terminalService
+      .register({
+        name,
+        branchId,
+      })
+      .subscribe({
+        next: (terminal) => {
+          this.terminalService.setTerminalId(terminal.id);
+          this.saving.set(false);
 
-        this.router.navigate(['/sales']);
+          this.router.navigate(['/sales']);
+        },
+
+        error: (error) => {
+          console.error('Error registrando terminal', error);
+
+          this.error.set('No fue posible registrar la terminal.');
+
+          this.saving.set(false);
+        },
+      });
+  }
+
+  private loadBranches(): void {
+    this.branchService.findAll().subscribe({
+      next: (branches) => {
+        this.branches.set(branches);
+
+        if (branches.length > 0 && !this.selectedBranchId()) {
+          this.selectedBranchId.set(branches[0].id);
+        }
       },
 
       error: (error) => {
-        console.error('Error registrando terminal', error);
-
-        this.error.set('No fue posible registrar la terminal.');
-
-        this.saving.set(false);
+        console.error('Error cargando sucursales', error);
+        this.error.set('No fue posible consultar las sucursales.');
       },
     });
   }
