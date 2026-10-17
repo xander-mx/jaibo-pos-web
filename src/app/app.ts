@@ -1,11 +1,12 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { environment } from '../environments/environment';
 
 import { AuthService } from '@core/auth/auth.service';
-import { TerminalService } from '@core/config/terminal.service';
+import { CurrentTerminal, TerminalService } from '@core/config/terminal.service';
 import { RealtimeService } from '@core/realtime/realtime.service';
 import { ThemeService } from '@core/ui/theme.service';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -15,7 +16,7 @@ import { ThemeService } from '@core/ui/theme.service';
 })
 export class App implements OnInit {
   protected readonly title = signal('jaibo-pos-web');
-
+  readonly currentTerminal = signal<CurrentTerminal | null>(null);
   protected readonly menuOpen = signal(false);
   readonly environment = environment;
 
@@ -30,22 +31,10 @@ export class App implements OnInit {
   ngOnInit(): void {
     this.themeService.initialize();
 
-    const token = this.authService.getToken();
+    this.refreshTerminalContext();
 
-    const terminalId = this.terminalService.getTerminalId();
-
-    if (!token || !terminalId) {
-      return;
-    }
-
-    this.terminalService.getCurrent().subscribe({
-      next: (terminal) => {
-        this.realtimeService.connect(token, terminalId, terminal.branchId);
-      },
-
-      error: (error) => {
-        console.error('Unable to initialize realtime connection', error);
-      },
+    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
+      this.refreshTerminalContext();
     });
   }
 
@@ -72,10 +61,40 @@ export class App implements OnInit {
   changeTerminal(): void {
     this.menuOpen.set(false);
 
+    this.currentTerminal.set(null);
+
     this.terminalService.clear();
 
     this.realtimeService.disconnect();
 
     this.router.navigate(['/terminal-setup']);
+  }
+
+  private refreshTerminalContext(): void {
+    const token = this.authService.getToken();
+    const terminalId = this.terminalService.getTerminalId();
+
+    if (!token || !terminalId) {
+      this.currentTerminal.set(null);
+      return;
+    }
+
+    if (this.currentTerminal()?.terminalId === terminalId) {
+      return;
+    }
+
+    this.terminalService.getCurrent().subscribe({
+      next: (terminal) => {
+        this.currentTerminal.set(terminal);
+
+        this.realtimeService.connect(token, terminalId, terminal.branchId);
+      },
+
+      error: (error) => {
+        console.error('Unable to initialize terminal context', error);
+
+        this.currentTerminal.set(null);
+      },
+    });
   }
 }

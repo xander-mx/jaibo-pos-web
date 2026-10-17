@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { PaySaleRequest, SalePaymentRequest, SalesService } from '../sales.service';
 
 import { SaleDetail } from '@core/models/sale-detail';
+import { PaymentMethod, paymentMethodLabel } from '@core/models/payment-method';
 
 @Component({
   selector: 'app-sale-payment',
@@ -21,8 +22,9 @@ export class SalePaymentComponent {
   readonly cancelled = output<void>();
 
   readonly payments = signal<SalePaymentRequest[]>([]);
-
-  readonly paymentMethod = signal<'CASH' | 'TRANSFER' | 'CARD'>('CASH');
+  readonly PaymentMethod = PaymentMethod;
+  readonly paymentMethod = signal<PaymentMethod>(PaymentMethod.CASH);
+  readonly paymentMethodLabel = paymentMethodLabel;
 
   readonly amount = signal<number | null>(null);
   readonly cashReceived = signal<number | null>(null);
@@ -41,7 +43,7 @@ export class SalePaymentComponent {
   }
 
   change(): number {
-    if (this.paymentMethod() !== 'CASH') {
+    if (this.paymentMethod() !== PaymentMethod.CASH) {
       return 0;
     }
 
@@ -69,7 +71,7 @@ export class SalePaymentComponent {
       return;
     }
 
-    if (method === 'CASH') {
+    if (method === PaymentMethod.CASH) {
       const received = this.cashReceived();
 
       if (received === null || received < amount) {

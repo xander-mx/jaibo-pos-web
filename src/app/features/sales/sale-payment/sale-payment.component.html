@@ -32,15 +32,15 @@
         [ngModel]="paymentMethod()"
         (ngModelChange)="paymentMethod.set($event)"
       >
-        <option value="CASH">
+        <option [value]="PaymentMethod.CASH">
           Efectivo
         </option>
 
-        <option value="TRANSFER">
+        <option [value]="PaymentMethod.TRANSFER">
           Transferencia
         </option>
 
-        <option value="CARD">
+        <option [value]="PaymentMethod.CARD">
           Tarjeta
         </option>
       </select>
@@ -122,7 +122,7 @@
     <div class="payment-row">
 
       <span>
-        {{ payment.paymentMethod }}
+        {{ paymentMethodLabel(payment.paymentMethod) }}
       </span>
 
       <strong>

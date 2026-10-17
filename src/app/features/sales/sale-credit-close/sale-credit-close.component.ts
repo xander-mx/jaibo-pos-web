@@ -3,6 +3,7 @@ import { Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { CloseCreditSaleRequest, SalePaymentRequest, SalesService } from '../sales.service';
+import { PaymentMethod, paymentMethodLabel } from '@core/models/payment-method';
 
 import { SaleDetail } from '@core/models/sale-detail';
 
@@ -21,8 +22,9 @@ export class SaleCreditCloseComponent {
   readonly cancelled = output<void>();
 
   readonly payments = signal<SalePaymentRequest[]>([]);
-
-  readonly paymentMethod = signal<'CASH' | 'TRANSFER' | 'CARD'>('CASH');
+  readonly PaymentMethod = PaymentMethod;
+  readonly paymentMethod = signal<PaymentMethod>(PaymentMethod.CASH);
+  readonly paymentMethodLabel = paymentMethodLabel;
 
   readonly amount = signal<number | null>(null);
 
@@ -42,7 +44,7 @@ export class SaleCreditCloseComponent {
   }
 
   change(): number {
-    if (this.paymentMethod() !== 'CASH') {
+    if (this.paymentMethod() !== PaymentMethod.CASH) {
       return 0;
     }
 
@@ -71,7 +73,7 @@ export class SaleCreditCloseComponent {
       return;
     }
 
-    if (method === 'CASH') {
+    if (method === PaymentMethod.CASH) {
       const received = this.cashReceived();
 
       if (received === null || received < amount) {

@@ -45,13 +45,7 @@ export class CustomerService {
   constructor(private readonly http: HttpClient) {}
 
   findActive(search?: string): Observable<Customer[]> {
-    let params = new HttpParams();
-
-    if (search && search.trim()) {
-      params = params.set('q', search.trim());
-    }
-
-    return this.http.get<Customer[]>(this.apiUrl, { params });
+    return this.find(search, true);
   }
 
   findOpenReceivables(customerId: string): Observable<Receivable[]> {
@@ -83,5 +77,27 @@ export class CustomerService {
 
   applyCreditPayment(customerId: string, request: CreditPaymentRequest): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${customerId}/credit-payments`, request);
+  }
+
+  find(search?: string, active = true): Observable<Customer[]> {
+    let params = new HttpParams().set('active', String(active));
+
+    if (search && search.trim()) {
+      params = params.set('q', search.trim());
+    }
+
+    return this.http.get<Customer[]>(this.apiUrl, { params });
+  }
+
+  findInactive(search?: string): Observable<Customer[]> {
+    return this.find(search, false);
+  }
+
+  deactivate(customerId: string): Observable<Customer> {
+    return this.http.patch<Customer>(`${this.apiUrl}/${customerId}/deactivate`, {});
+  }
+
+  activate(customerId: string): Observable<Customer> {
+    return this.http.patch<Customer>(`${this.apiUrl}/${customerId}/activate`, {});
   }
 }

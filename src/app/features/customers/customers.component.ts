@@ -28,6 +28,11 @@ export class CustomersComponent implements OnInit {
   readonly createLoading = signal(false);
   readonly createError = signal('');
   readonly editingCustomerId = signal<string | null>(null);
+  readonly showActive = signal(true);
+  readonly changingStatusCustomerId = signal<string | null>(null);
+  readonly customerToDeactivate = signal<Customer | null>(null);
+  readonly showDeactivateModal = signal(false);
+  readonly deactivateError = signal('');
 
   constructor(
     private readonly customerService: CustomerService,
@@ -42,7 +47,7 @@ export class CustomersComponent implements OnInit {
     this.loading.set(true);
     this.error.set('');
 
-    this.customerService.findActive(this.search()).subscribe({
+    this.customerService.find(this.search(), this.showActive()).subscribe({
       next: (customers) => {
         this.customers.set(customers);
         this.loading.set(false);
@@ -92,6 +97,11 @@ export class CustomersComponent implements OnInit {
 
     const phone = this.newCustomerPhone().trim();
     const email = this.newCustomerEmail().trim();
+
+    if (email && !this.isValidEmail(email)) {
+      this.createError.set('Captura un correo electrónico válido');
+      return;
+    }
 
     const request = {
       name,
@@ -145,6 +155,97 @@ export class CustomersComponent implements OnInit {
     this.showCreate.set(true);
   }
 
+  showActiveCustomers(): void {
+    if (this.showActive()) {
+      return;
+    }
+
+    this.showActive.set(true);
+    this.loadCustomers();
+  }
+
+  showInactiveCustomers(): void {
+    if (!this.showActive()) {
+      return;
+    }
+
+    this.showActive.set(false);
+    this.loadCustomers();
+  }
+
+  activateCustomer(customer: Customer): void {
+    this.changingStatusCustomerId.set(customer.id);
+
+    this.customerService.activate(customer.id).subscribe({
+      next: () => {
+        this.changingStatusCustomerId.set(null);
+        this.loadCustomers();
+      },
+
+      error: (error) => {
+        console.error('Error activating customer', error);
+
+        this.error.set(error?.error?.detail ?? 'No fue posible reactivar el cliente');
+
+        this.changingStatusCustomerId.set(null);
+      },
+    });
+  }
+
+  startDeactivateCustomer(customer: Customer): void {
+    this.customerToDeactivate.set(customer);
+    this.deactivateError.set('');
+    this.showDeactivateModal.set(true);
+  }
+
+  cancelDeactivateCustomer(): void {
+    this.showDeactivateModal.set(false);
+    this.customerToDeactivate.set(null);
+    this.deactivateError.set('');
+    this.changingStatusCustomerId.set(null);
+  }
+
+  confirmDeactivateCustomer(): void {
+    const customer = this.customerToDeactivate();
+
+    if (!customer) {
+      return;
+    }
+
+    this.changingStatusCustomerId.set(customer.id);
+    this.deactivateError.set('');
+
+    this.customerService.deactivate(customer.id).subscribe({
+      next: () => {
+        this.changingStatusCustomerId.set(null);
+
+        this.showDeactivateModal.set(false);
+        this.customerToDeactivate.set(null);
+        this.deactivateError.set('');
+
+        this.loadCustomers();
+      },
+
+      error: (error) => {
+        console.error('Error deactivating customer', error);
+
+        // MUY IMPORTANTE:
+        // liberar primero el estado de carga.
+        this.changingStatusCustomerId.set(null);
+
+        if (error?.status === 409) {
+          this.deactivateError.set(
+            'No puedes desactivar este cliente porque tiene cuentas por cobrar pendientes.',
+          );
+
+          return;
+        }
+
+        this.deactivateError.set(error?.error?.detail ?? 'No fue posible desactivar el cliente');
+      },
+    });
+  }
+
   private resetCreateForm(): void {
     this.editingCustomerId.set(null);
 
@@ -155,5 +256,9 @@ export class CustomersComponent implements OnInit {
     this.newCustomerWholesale.set(false);
     this.newCustomerCreditEnabled.set(false);
     this.createError.set('');
+  }
+
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }

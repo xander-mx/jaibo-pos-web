@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 
 import { Sale } from '@core/models/sale';
 import { SaleDetail } from '@core/models/sale-detail';
+import { PaymentMethod } from '@core/models/payment-method';
 
 export interface AddSaleItemRequest {
   presentationId: string;
@@ -23,7 +24,7 @@ export interface SplitSaleItemRequest {
 }
 
 export interface SalePaymentRequest {
-  paymentMethod: 'CASH' | 'TRANSFER' | 'CARD';
+  paymentMethod: PaymentMethod;
   amount: number;
 }
 

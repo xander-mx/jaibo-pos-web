@@ -225,32 +225,42 @@
 
             <div class="sale-item-detail">
 
-              <span>
-                Cantidad:
-                <strong>
-                  <div class="quantity-controls">
-                    <button
-                      type="button"
-                      (click)="decreaseQuantity(item)"
-                    >
-                      −
-                    </button>
+              <div class="quantity-section">
+  <span class="quantity-label">
+    Cantidad:
+  </span>
 
-                    <strong>
-                      {{ item.quantity }}
-                    </strong>
+                <div class="quantity-controls">
 
-                    <button
-                      type="button"
-                      (click)="increaseQuantity(item)"
-                    >
-                      +
-                    </button>
+                  <button
+                    type="button"
+                    (click)="decreaseQuantity(item)"
+                    aria-label="Disminuir cantidad"
+                  >
+                    −
+                  </button>
 
-                  </div>
-                </strong>
+                  <input
+                    type="number"
+                    min="0.001"
+                    step="0.001"
+                    inputmode="decimal"
+                    class="quantity-input"
+                    [ngModel]="item.quantity"
+                    (change)="changeQuantityFromInput(item, $event)"
+                    (keydown.enter)="changeQuantityFromInput(item, $event)"
+                  >
 
-              </span>
+                  <button
+                    type="button"
+                    (click)="increaseQuantity(item)"
+                    aria-label="Aumentar cantidad"
+                  >
+                    +
+                  </button>
+
+                </div>
+              </div>
 
               <span>
                 Precio:
@@ -345,50 +355,47 @@
 
               @if (editingItemId() === item.id) {
 
-                <div class="edit-grid">
+                <div class="price-editor">
 
                   <label>
-                    Cantidad
+                    <span>Precio</span>
 
-                    <input
-                      type="number"
-                      [ngModel]="editingQuantity()"
-                      (ngModelChange)="editingQuantity.set($event)"
-                    >
+                    <div class="price-editor-field">
+                      <span class="money-prefix">
+                        MX$
+                      </span>
+
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputmode="decimal"
+                        [ngModel]="editingPrice()"
+                        (ngModelChange)="editingPrice.set($event)"
+                        (keydown.enter)="saveItemPrice(item)"
+                      >
+                    </div>
                   </label>
 
-                  <button
-                    type="button"
-                    (click)="saveItemQuantity(item)"
-                  >
-                    Guardar cantidad
-                  </button>
+                  <div class="price-editor-actions">
 
-                  <label>
-                    Precio
-
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      [ngModel]="editingPrice()"
-                      (ngModelChange)="editingPrice.set($event)"
+                    <button
+                      type="button"
+                      class="primary-button"
+                      (click)="saveItemPrice(item)"
                     >
-                  </label>
+                      Guardar
+                    </button>
 
-                  <button
-                    type="button"
-                    (click)="saveItemPrice(item)"
-                  >
-                    Guardar precio
-                  </button>
+                    <button
+                      type="button"
+                      class="secondary-button"
+                      (click)="cancelEditItem()"
+                    >
+                      Cancelar
+                    </button>
 
-                  <button
-                    type="button"
-                    (click)="cancelEditItem()"
-                  >
-                    Cancelar
-                  </button>
+                  </div>
 
                 </div>
 
@@ -743,30 +750,96 @@
 
             <div class="customer-selector">
 
-              <label>
+              <label class="customer-search-label">
                 Seleccionar cliente
 
-                <select
-                  [ngModel]="selectedCustomerId()"
-                  (ngModelChange)="selectedCustomerId.set($event)"
-                >
+                <div class="customer-search-picker">
 
-                  <option [ngValue]="null">
-                    Selecciona un cliente
-                  </option>
+                  <div class="customer-search-field">
 
-                  @for (
-                    customer of customers();
-                    track customer.id
-                    ) {
+                    <input
+                      type="search"
+                      placeholder="Buscar por nombre, teléfono o correo..."
+                      autocomplete="off"
+                      [ngModel]="customerSearch()"
+                      (ngModelChange)="
+          customerSearch.set($event);
+          selectedCustomerId.set(null);
+          showCustomerOptions.set(true);
+          customerError.set('')
+        "
+                      (focus)="showCustomerOptions.set(true)"
+                    >
 
-                    <option [value]="customer.id">
-                      {{ customer.name }}
-                    </option>
+                    @if (customerSearch()) {
+                      <button
+                        type="button"
+                        class="customer-search-clear"
+                        (click)="clearCustomerSelection()"
+                        aria-label="Limpiar cliente"
+                      >
+                        ×
+                      </button>
+                    }
+
+                  </div>
+
+                  @if (showCustomerOptions()) {
+
+                    <div class="customer-options">
+
+                      @if (filteredCustomers().length === 0) {
+
+                        <div class="customer-option-empty">
+                          No se encontraron clientes
+                        </div>
+
+                      } @else {
+
+                        @for (
+                          customer of filteredCustomers();
+                          track customer.id
+                          ) {
+
+                          <button
+                            type="button"
+                            class="customer-option"
+                            [class.selected]="
+                selectedCustomerId() === customer.id
+              "
+                            (click)="selectCustomer(customer)"
+                          >
+
+                            <strong>
+                              {{ customer.name }}
+                            </strong>
+
+                            @if (customer.phone || customer.email) {
+                              <small>
+                                {{ customer.phone ?? '' }}
+
+                                @if (
+                                  customer.phone
+                                  && customer.email
+                                  ) {
+                                  ·
+                                }
+
+                                {{ customer.email ?? '' }}
+                              </small>
+                            }
+
+                          </button>
+
+                        }
+
+                      }
+
+                    </div>
 
                   }
 
-                </select>
+                </div>
               </label>
 
               @if (customerError()) {
@@ -857,6 +930,22 @@
             </button>
 
           </div>
+
+          @if (sale()!.customerId) {
+
+            <div class="credit-close-action">
+
+              <button
+                type="button"
+                class="credit-close-button"
+                (click)="closeAsCredit()"
+              >
+                Cerrar a crédito
+              </button>
+
+            </div>
+
+          }
 
           <button
             type="button"
@@ -970,13 +1059,6 @@
 
           @if (sale()!.customerId) {
 
-            <button
-              type="button"
-              (click)="closeAsCredit()"
-            >
-              Cerrar a crédito
-            </button>
-
             @if (showCreditClose()) {
 
               <app-sale-credit-close
@@ -1000,60 +1082,99 @@
 
         @if (showCancelSale()) {
 
-          <section class="discount-editor">
+          <div
+            class="cancel-modal-backdrop"
+            (click)="closeCancelSale()"
+          >
 
-            <h3>
-              Cancelar cuenta
-            </h3>
+            <section
+              class="cancel-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="cancel-sale-title"
+              (click)="$event.stopPropagation()"
+            >
 
-            <p>
-              La cuenta quedará cancelada y no podrá modificarse después.
-            </p>
+              <header class="cancel-modal-header">
 
-            <label>
-              Motivo de cancelación
+                <div>
+                  <h3 id="cancel-sale-title">
+                    Cancelar cuenta
+                  </h3>
 
-              <textarea
-                rows="3"
-                maxlength="200"
-                [ngModel]="cancelReason()"
-                (ngModelChange)="cancelReason.set($event)"
-                [disabled]="cancellingSale()"
-              ></textarea>
-            </label>
+                  <p>
+                    Esta acción no se puede deshacer.
+                  </p>
+                </div>
 
-            @if (cancelSaleError()) {
-              <p class="input-error">
-                {{ cancelSaleError() }}
-              </p>
-            }
+                <button
+                  type="button"
+                  class="cancel-modal-close"
+                  (click)="closeCancelSale()"
+                  [disabled]="cancellingSale()"
+                  aria-label="Cerrar"
+                >
+                  ×
+                </button>
 
-            <div class="discount-actions">
+              </header>
 
-              <button
-                type="button"
-                class="danger-button"
-                (click)="confirmCancelSale()"
-                [disabled]="cancellingSale()"
-              >
-                {{
-                  cancellingSale()
-                    ? 'Cancelando...'
-                    : 'Confirmar cancelación'
-                }}
-              </button>
+              <div class="cancel-modal-warning">
+                La cuenta quedará cancelada y no podrá modificarse después.
+              </div>
 
-              <button
-                type="button"
-                (click)="closeCancelSale()"
-                [disabled]="cancellingSale()"
-              >
-                Volver
-              </button>
+              <label class="cancel-modal-field">
+                <span>Motivo de cancelación</span>
 
-            </div>
+                <textarea
+                  rows="4"
+                  maxlength="200"
+                  placeholder="Ej. Cliente canceló el pedido"
+                  [ngModel]="cancelReason()"
+                  (ngModelChange)="cancelReason.set($event)"
+                  [disabled]="cancellingSale()"
+                ></textarea>
 
-          </section>
+                <small>
+                  Máximo 200 caracteres.
+                </small>
+              </label>
+
+              @if (cancelSaleError()) {
+                <p class="input-error">
+                  {{ cancelSaleError() }}
+                </p>
+              }
+
+              <footer class="cancel-modal-actions">
+
+                <button
+                  type="button"
+                  class="secondary-button"
+                  (click)="closeCancelSale()"
+                  [disabled]="cancellingSale()"
+                >
+                  Volver
+                </button>
+
+                <button
+                  type="button"
+                  class="danger-button cancel-confirm-button"
+                  (click)="confirmCancelSale()"
+                  [disabled]="cancellingSale()"
+                >
+                  {{
+                    cancellingSale()
+                      ? 'Cancelando...'
+                      : 'Confirmar cancelación'
+                  }}
+                </button>
+
+              </footer>
+
+            </section>
+
+          </div>
 
         }
 
@@ -1070,100 +1191,92 @@
       <!-- CATÁLOGO -->
       <section class="catalog-panel"  [class.mobile-panel-hidden]=" mobilePanel() !== 'catalog'">
 
-        <div class="section-title">
-          <h2>Catálogo</h2>
-        </div>
+        <section
+          class="catalog-panel"
+          [class.mobile-panel-hidden]="mobilePanel() !== 'catalog'"
+        >
 
-        <div class="categories">
+          <div class="catalog-section">
 
-          <button
-            type="button"
-            class="category-button"
-            [class.active]="selectedCategoryId() === null"
-            (click)="selectCategory(null)"
-          >
-            Todos
-          </button>
+            <div class="catalog-section-header">
+              <span class="catalog-section-label">
+                Categorías
+              </span>
+            </div>
 
-          @for (
-            category of categories();
-            track category.id
-            ) {
+            <div class="catalog-category-list">
 
-            <button
-              type="button"
-              class="category-button"
-              [class.active]="
-                selectedCategoryId() === category.id
-              "
-              (click)="selectCategory(category.id)"
-            >
-              {{ category.name }}
-            </button>
-
-          }
-
-        </div>
-
-        <div class="products-grid">
-
-          @for (
-            product of visibleProducts();
-            track product.id
-            ) {
-
-            <button
-              type="button"
-              class="product-button"
-              [class.active]="
-                selectedProduct()?.id === product.id
-              "
-              (click)="selectProduct(product)"
-            >
-              {{ product.name }}
-            </button>
-
-          }
-
-        </div>
-
-        @if (selectedProduct()) {
-
-          <section class="presentations">
-
-            <h3>
-              {{ selectedProduct()!.name }}
-            </h3>
-
-            <div class="presentations-grid">
+              <button
+                type="button"
+                class="catalog-category-chip"
+                [class.active]="!selectedCategoryId()"
+                (click)="selectCategory(null)"
+              >
+                Todos
+              </button>
 
               @for (
-                presentation of presentations();
-                track presentation.id
+                category of categories();
+                track category.id
                 ) {
 
                 <button
                   type="button"
-                  class="presentation-button"
-                  (click)="addPresentation(presentation)"
-                  [disabled]="addingItem()"
+                  class="catalog-category-chip"
+                  [class.active]="selectedCategoryId() === category.id"
+                  (click)="selectCategory(category.id)"
+                >
+                  {{ category.name }}
+                </button>
+
+              }
+
+            </div>
+
+          </div>
+
+          <div class="catalog-section">
+
+            <div class="catalog-section-header products-header">
+
+              <div>
+                <span class="catalog-section-label">
+                  Productos
+                </span>
+
+                <strong class="catalog-selected-category">
+                  {{ selectedCategoryName() }}
+                </strong>
+              </div>
+
+              <small class="catalog-products-count">
+                {{ visibleProducts().length }}
+                productos
+              </small>
+
+            </div>
+
+
+            <div class="catalog-product-grid">
+
+              @for (
+                product of visibleProducts();
+                track product.id
+                ) {
+
+                <button
+                  type="button"
+                  class="catalog-product-card"
+                  (click)="selectProduct(product)"
                 >
 
-                  <span>
-                    {{ presentation.name }}
+                  <span class="catalog-product-type">
+                    Producto
                   </span>
 
-                  @if (!presentation.openPrice) {
-                    <strong>
-                      {{ presentation.salePrice | currency:'MXN' }}
-                    </strong>
-                  }
-
-                  @if (presentation.openPrice) {
-                    <strong>
-                      Precio abierto
-                    </strong>
-                  }
+                  <strong class="catalog-product-name">
+                    {{ product.name }}
+                  </strong>
 
                 </button>
 
@@ -1171,98 +1284,149 @@
 
             </div>
 
-          </section>
+            @if (selectedProduct()) {
 
-        }
+              <section class="presentations">
 
-        @if (pendingPresentation()) {
+                <div class="catalog-section-header">
+                  <div>
+                    <span class="catalog-section-label">
+                      Presentaciones
+                    </span>
 
-          <section class="pending-item">
+                    <strong class="catalog-selected-category">
+                      {{ selectedProduct()!.name }}
+                    </strong>
+                  </div>
+                </div>
 
-            <h3>
-              {{ pendingPresentation()!.name }}
-            </h3>
+                <div class="presentations-grid">
 
-            @if (
-              pendingPresentation()!.variableQuantity
-              ) {
+                  @for (
+                    presentation of presentations();
+                    track presentation.id
+                    ) {
 
-              <label>
-                Cantidad
-              </label>
+                    <button
+                      type="button"
+                      class="presentation-button"
+                      (click)="addPresentation(presentation)"
+                      [disabled]="addingItem()"
+                    >
 
-              <input
-                type="number"
-                [step]="
-                  quantityStep(
-                    pendingPresentation()!.unit.decimalPlaces
-                  )
-                "
-                [min]="
-                  pendingPresentation()!.minimumQuantity
-                  ?? quantityStep(
-                       pendingPresentation()!.unit.decimalPlaces
-                     )
-                "
-                [ngModel]="pendingQuantity()"
-                (ngModelChange)="pendingQuantity.set($event)"
-              >
+                      <span>
+                        {{ presentation.name }}
+                      </span>
+
+                      @if (!presentation.openPrice) {
+                        <strong>
+                          {{ presentation.salePrice | currency:'MXN' }}
+                        </strong>
+                      }
+
+                      @if (presentation.openPrice) {
+                        <strong>
+                          Precio abierto
+                        </strong>
+                      }
+
+                    </button>
+
+                  }
+
+                </div>
+
+              </section>
 
             }
 
-            @if (
-              pendingPresentation()!.openPrice
-              ) {
+          </div>
 
-              <label>
-                Precio
-              </label>
+          @if (pendingPresentation()) {
 
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                [ngModel]="pendingPrice()"
-                (ngModelChange)="pendingPrice.set($event)"
-              >
+            <section class="pending-item">
 
-            }
+              <h3>
+                {{ pendingPresentation()!.name }}
+              </h3>
 
-            @if (itemInputError()) {
-              <p class="input-error">
-                {{ itemInputError() }}
-              </p>
-            }
+              @if (pendingPresentation()!.variableQuantity) {
 
-            <div class="pending-actions">
+                <label>
+                  Cantidad
+                </label>
 
-              <button
-                type="button"
-                class="primary-button"
-                (click)="confirmPresentation()"
-                [disabled]="addingItem()"
-              >
-                {{
-                  addingItem()
-                    ? 'Agregando...'
-                    : 'Agregar'
-                }}
-              </button>
+                <input
+                  type="number"
+                  [step]="
+          quantityStep(
+            pendingPresentation()!.unit.decimalPlaces
+          )
+        "
+                  [min]="
+          pendingPresentation()!.minimumQuantity
+          ?? quantityStep(
+            pendingPresentation()!.unit.decimalPlaces
+          )
+        "
+                  [ngModel]="pendingQuantity()"
+                  (ngModelChange)="pendingQuantity.set($event)"
+                >
 
-              <button
-                type="button"
-                class="secondary-button"
-                (click)="cancelPendingPresentation()"
-                [disabled]="addingItem()"
-              >
-                Cancelar
-              </button>
+              }
 
-            </div>
+              @if (pendingPresentation()!.openPrice) {
 
-          </section>
+                <label>
+                  Precio
+                </label>
 
-        }
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  [ngModel]="pendingPrice()"
+                  (ngModelChange)="pendingPrice.set($event)"
+                >
+
+              }
+
+              @if (itemInputError()) {
+                <p class="input-error">
+                  {{ itemInputError() }}
+                </p>
+              }
+
+              <div class="pending-actions">
+
+                <button
+                  type="button"
+                  class="primary-button"
+                  (click)="confirmPresentation()"
+                  [disabled]="addingItem()"
+                >
+                  {{
+                    addingItem()
+                      ? 'Agregando...'
+                      : 'Agregar'
+                  }}
+                </button>
+
+                <button
+                  type="button"
+                  (click)="cancelPendingPresentation()"
+                  [disabled]="addingItem()"
+                >
+                  Cancelar
+                </button>
+
+              </div>
+
+            </section>
+
+          }
+
+        </section>
 
       </section>
 

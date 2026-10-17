@@ -297,15 +297,52 @@ tbody tr:hover {
   }
 
   .page-header {
-    align-items: flex-start;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filters-card {
+    padding: 1rem;
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  .filters label,
+  .filters select {
+    width: 100%;
+    min-width: 0;
   }
 
   .pending-check {
-    min-height: auto;
+    width: 100%;
+    min-height: 44px;
+
+    box-sizing: border-box;
+
+    padding: 0.5rem 0;
+
+    white-space: normal;
   }
 
-}
+  .filter-actions {
+    width: 100%;
 
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 0.6rem;
+
+    white-space: normal;
+  }
+
+  .filter-actions button {
+    width: 100%;
+    min-width: 0;
+  }
+}
 .payment-badge.neutral {
   background: #f2f4f7;
   color: #475467;

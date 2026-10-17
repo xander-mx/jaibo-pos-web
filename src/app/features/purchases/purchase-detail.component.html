@@ -148,33 +148,77 @@
 
           <div class="add-item-grid">
 
-            <label>
+            <label class="product-picker-label">
               Producto
 
-              <select
-                [ngModel]="productId()"
-                (ngModelChange)="productId.set($event); addItemError.set('')"
-              >
+              <div class="product-picker">
 
-                <option value="">
-                  Selecciona un producto
-                </option>
+                <div class="product-search-field">
 
-                @for (
-                  product of products();
-                  track product.id
-                  ) {
-
-                  <option
-                    [value]="product.id"
+                  <input
+                    type="search"
+                    placeholder="Buscar producto..."
+                    autocomplete="off"
+                    [ngModel]="productSearch()"
+                    (ngModelChange)="
+          productSearch.set($event);
+          productId.set('');
+          showProductOptions.set(true);
+          addItemError.set('')
+        "
+                    (focus)="showProductOptions.set(true)"
                   >
-                    {{ product.name }}
-                  </option>
+
+                  @if (productSearch()) {
+                    <button
+                      type="button"
+                      class="product-search-clear"
+                      (click)="clearPurchaseProduct()"
+                      aria-label="Limpiar producto"
+                    >
+                      ×
+                    </button>
+                  }
+
+                </div>
+
+                @if (showProductOptions()) {
+
+                  <div class="product-options">
+
+                    @if (filteredProducts().length === 0) {
+
+                      <div class="product-option-empty">
+                        No se encontraron productos
+                      </div>
+
+                    } @else {
+
+                      @for (
+                        product of filteredProducts();
+                        track product.id
+                        ) {
+
+                        <button
+                          type="button"
+                          class="product-option"
+                          [class.selected]="
+                productId() === product.id
+              "
+                          (click)="selectPurchaseProduct(product)"
+                        >
+                          {{ product.name }}
+                        </button>
+
+                      }
+
+                    }
+
+                  </div>
 
                 }
 
-              </select>
-
+              </div>
             </label>
 
             <label>

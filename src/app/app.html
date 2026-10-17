@@ -45,6 +45,14 @@
         </a>
 
         <a
+          routerLink="/customers"
+          routerLinkActive="active"
+          (click)="closeMenu()"
+        >
+          Clientes
+        </a>
+
+        <a
           routerLink="/cash"
           routerLinkActive="active"
           (click)="closeMenu()"
@@ -139,7 +147,19 @@
           (click)="changeTerminal()"
           title="Cambiar terminal"
         >
-          Terminal
+          @if (currentTerminal(); as terminal) {
+            <span class="terminal-context">
+              <span class="terminal-context__branch">
+                {{ terminal.branchName }}
+              </span>
+
+              <small class="terminal-context__terminal">
+                {{ terminal.terminalName }}
+              </small>
+            </span>
+          } @else {
+            Terminal
+          }
         </button>
 
         <button

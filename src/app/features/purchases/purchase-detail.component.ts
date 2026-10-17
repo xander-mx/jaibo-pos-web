@@ -37,6 +37,8 @@ export class PurchaseDetailComponent implements OnInit {
   readonly paymentAmount = signal<number | null>(null);
   readonly paymentLoading = signal(false);
   readonly paymentError = signal('');
+  readonly productSearch = signal('');
+  readonly showProductOptions = signal(false);
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -289,6 +291,29 @@ export class PurchaseDetailComponent implements OnInit {
     return amount >= 0.01 && amount <= purchase.pendingBalance && !this.paymentLoading();
   }
 
+  filteredProducts(): Product[] {
+    const search = this.normalizeText(this.productSearch());
+
+    if (!search) {
+      return this.products();
+    }
+
+    return this.products().filter((product) => this.normalizeText(product.name).includes(search));
+  }
+
+  selectPurchaseProduct(product: Product): void {
+    this.productId.set(product.id);
+    this.productSearch.set(product.name);
+    this.showProductOptions.set(false);
+    this.addItemError.set('');
+  }
+
+  clearPurchaseProduct(): void {
+    this.productId.set('');
+    this.productSearch.set('');
+    this.showProductOptions.set(false);
+  }
+
   private reloadPurchase(purchaseId: string): void {
     this.purchaseService.findById(purchaseId).subscribe({
       next: (purchase) => {
@@ -311,5 +336,14 @@ export class PurchaseDetailComponent implements OnInit {
         console.error('Error loading purchasable products', error);
       },
     });
+  }
+
+  private normalizeText(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
   }
 }

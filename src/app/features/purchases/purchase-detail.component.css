@@ -110,23 +110,30 @@ tbody tr:last-child td {
 
 @media (max-width: 700px) {
 
-  main {
-    padding: 12px;
-  }
+  @media (max-width: 700px) {
 
-  .purchase-header {
-    flex-direction: column;
-  }
+    .product-options {
+      position: absolute;
 
-  .summary-card {
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
+      top: calc(100% + 5px);
+      right: 0;
+      bottom: auto;
+      left: 0;
 
-  table {
-    font-size: 14px;
-  }
+      max-height: 45vh;
 
+      z-index: 9999;
+    }
+
+    .product-option {
+      min-height: 48px;
+
+      display: flex;
+      align-items: center;
+
+      font-size: 1rem;
+    }
+  }
 }
 
 .add-item-card {
@@ -659,4 +666,140 @@ tbody tr:last-child td {
 .money-cell {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.product-picker {
+  position: relative;
+  width: 100%;
+  z-index: 20;
+}
+
+.product-search-field {
+  position: relative;
+
+  width: 100%;
+}
+
+.product-search-field input {
+  width: 100%;
+  height: 44px;
+
+  box-sizing: border-box;
+
+  padding: 0 2.6rem 0 0.75rem;
+
+  border: 1px solid #8a8f98;
+  border-radius: 10px;
+
+  background: var(--surface-input);
+  color: var(--text-primary);
+
+  font: inherit;
+}
+
+.product-search-field input:focus {
+  outline: none;
+
+  border-color: var(--jaibo-orange);
+
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--jaibo-orange) 18%,
+      transparent
+    );
+}
+
+.product-search-clear {
+  position: absolute;
+
+  top: 50%;
+  right: 7px;
+
+  width: 30px;
+  height: 30px;
+
+  transform: translateY(-50%);
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 6px;
+
+  background: transparent;
+  color: #667085;
+
+  font-size: 1.25rem;
+
+  cursor: pointer;
+}
+
+.product-options {
+  position: absolute;
+
+  z-index: 9999;
+
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+
+  max-height: 280px;
+
+  overflow-y: auto;
+
+  padding: 5px;
+
+  background: var(--surface-card);
+
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+
+  box-shadow:
+    0 12px 30px
+    rgba(0, 0, 0, 0.18);
+}
+
+.product-option {
+  width: 100%;
+
+  display: block;
+
+  padding: 10px 12px;
+
+  background: transparent;
+  color: var(--text-primary);
+
+  border: 0;
+  border-radius: 7px;
+
+  text-align: left;
+  font: inherit;
+
+  cursor: pointer;
+}
+
+.product-option:hover,
+.product-option.selected {
+  background:
+    color-mix(
+      in srgb,
+      var(--jaibo-orange) 10%,
+      var(--surface-card)
+    );
+}
+
+.product-option-empty {
+  padding: 12px;
+
+  color: #667085;
+
+  font-size: 0.9rem;
+}
+
+.items-section,
+.add-item-card,
+.add-item-grid,
+.product-picker-label {
+  overflow: visible;
 }

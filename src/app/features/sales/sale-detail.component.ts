@@ -43,7 +43,6 @@ export class SaleDetailComponent implements OnInit {
   readonly pendingPrice = signal<number | null>(null);
   readonly itemInputError = signal('');
   readonly editingItemId = signal<string | null>(null);
-  readonly editingQuantity = signal<number | null>(null);
   readonly editingPrice = signal<number | null>(null);
   readonly itemActionError = signal('');
   readonly discountItemId = signal<string | null>(null);
@@ -80,6 +79,8 @@ export class SaleDetailComponent implements OnInit {
   readonly newSaleCustomerId = signal<string | null>(null);
   readonly creatingSale = signal(false);
   readonly newSaleError = signal('');
+  readonly customerSearch = signal('');
+  readonly showCustomerOptions = signal(false);
   private readonly destroyRef = inject(DestroyRef);
 
   constructor(
@@ -574,11 +575,7 @@ export class SaleDetailComponent implements OnInit {
        * En precio abierto solo mezclamos
        * si el precio es exactamente igual.
        */
-      if (unitPrice !== undefined && item.unitPrice !== unitPrice) {
-        return false;
-      }
-
-      return true;
+      return !(unitPrice !== undefined && item.unitPrice !== unitPrice);
     });
 
     this.addingItem.set(true);
@@ -658,39 +655,14 @@ export class SaleDetailComponent implements OnInit {
 
   startEditItem(item: SaleItem): void {
     this.editingItemId.set(item.id);
-    this.editingQuantity.set(item.quantity);
     this.editingPrice.set(item.unitPrice);
     this.itemActionError.set('');
   }
 
   cancelEditItem(): void {
     this.editingItemId.set(null);
-    this.editingQuantity.set(null);
     this.editingPrice.set(null);
     this.itemActionError.set('');
-  }
-
-  saveItemQuantity(item: SaleItem): void {
-    const currentSale = this.sale();
-    const quantity = this.editingQuantity();
-
-    if (!currentSale || quantity === null || quantity <= 0) {
-      this.itemActionError.set('Captura una cantidad válida');
-      return;
-    }
-
-    this.salesService.changeItemQuantity(currentSale.id, item.id, quantity).subscribe({
-      next: (updatedSale) => {
-        this.sale.set(updatedSale);
-        this.cancelEditItem();
-      },
-
-      error: (error) => {
-        console.error(error);
-
-        this.itemActionError.set(error?.error?.detail ?? 'No fue posible cambiar la cantidad');
-      },
-    });
   }
 
   saveItemPrice(item: SaleItem): void {
@@ -756,6 +728,25 @@ export class SaleDetailComponent implements OnInit {
     this.updateQuantity(item, newQuantity);
   }
 
+  changeQuantityFromInput(item: SaleItem, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const quantity = Number(input.value);
+
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      input.value = String(item.quantity);
+      this.itemActionError.set('Captura una cantidad válida');
+      return;
+    }
+
+    if (quantity === item.quantity) {
+      return;
+    }
+
+    this.itemActionError.set('');
+
+    this.updateQuantity(item, quantity);
+  }
+
   private loadCustomers(): void {
     this.customerService.findActive().subscribe({
       next: (customers) => {
@@ -786,8 +777,13 @@ export class SaleDetailComponent implements OnInit {
       return;
     }
 
+    const currentCustomer = this.currentCustomer();
+
     this.selectedCustomerId.set(currentSale.customerId ?? null);
 
+    this.customerSearch.set(currentCustomer?.name ?? '');
+
+    this.showCustomerOptions.set(false);
     this.customerError.set('');
     this.showCustomerSelector.set(true);
   }
@@ -795,6 +791,8 @@ export class SaleDetailComponent implements OnInit {
   cancelCustomerSelection(): void {
     this.showCustomerSelector.set(false);
     this.selectedCustomerId.set(null);
+    this.customerSearch.set('');
+    this.showCustomerOptions.set(false);
     this.customerError.set('');
   }
 
@@ -1199,5 +1197,52 @@ export class SaleDetailComponent implements OnInit {
         }
       },
     });
+  }
+
+  selectedCategoryName(): string {
+    const categoryId = this.selectedCategoryId();
+
+    if (!categoryId) {
+      return 'Todos';
+    }
+
+    return this.categories().find((category) => category.id === categoryId)?.name ?? 'Todos';
+  }
+
+  filteredCustomers(): Customer[] {
+    const search = this.normalizeText(this.customerSearch());
+
+    if (!search) {
+      return this.customers();
+    }
+
+    return this.customers().filter((customer) => {
+      const values = [customer.name, customer.phone ?? '', customer.email ?? ''];
+
+      return values.some((value) => this.normalizeText(value).includes(search));
+    });
+  }
+
+  selectCustomer(customer: Customer): void {
+    this.selectedCustomerId.set(customer.id);
+    this.customerSearch.set(customer.name);
+    this.showCustomerOptions.set(false);
+    this.customerError.set('');
+  }
+
+  clearCustomerSelection(): void {
+    this.selectedCustomerId.set(null);
+    this.customerSearch.set('');
+    this.showCustomerOptions.set(false);
+    this.customerError.set('');
+  }
+
+  private normalizeText(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
   }
 }
