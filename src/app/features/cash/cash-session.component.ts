@@ -78,12 +78,17 @@ export class CashSessionComponent implements OnInit {
 
     const comment = this.reopenComment().trim();
 
+    if (!comment) {
+      this.reopenError.set('Captura el motivo de reapertura');
+      return;
+    }
+
     this.reopening.set(true);
     this.reopenError.set('');
 
     this.cashSessionService
       .reopen(cashSession.id, {
-        comment: comment || null,
+        comment: comment,
       })
       .subscribe({
         next: (reopenedSession) => {

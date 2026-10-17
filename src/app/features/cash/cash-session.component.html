@@ -9,7 +9,7 @@
     <p>{{ error() }}</p>
   }
 
-  @if (!loading() && !cashSession()) {
+  @if (!loading() && (!cashSession() || cashSession()!.status !== 'OPEN')) {
 
     <section>
       <h2>Abrir caja</h2>
@@ -52,7 +52,7 @@
 
   }
 
-  @if (cashSession()) {
+  @if (cashSession() && cashSession()!.status === 'OPEN') {
 
     <section class="cash-overview">
 
@@ -217,6 +217,66 @@
             </div>
 
           </div>
+
+        </article>
+
+      }
+
+      @if (
+        cashSession()
+        && cashSession()!.status !== 'OPEN'
+        ) {
+
+        <article class="cash-card reopen-cash-card">
+
+          <div class="cash-card-header">
+            <div>
+        <span class="eyebrow">
+          REAPERTURA
+        </span>
+
+              <h2>
+                Reabrir caja
+              </h2>
+            </div>
+          </div>
+
+          <p class="cash-help">
+            Reabre esta caja si necesitas registrar movimientos que faltaron
+            antes del cierre.
+          </p>
+
+          <label class="cash-field">
+            <span>Motivo de reapertura</span>
+
+            <textarea
+              rows="3"
+              maxlength="200"
+              placeholder="Ej. Faltó registrar un abono o una venta"
+              [ngModel]="reopenComment()"
+              (ngModelChange)="reopenComment.set($event)"
+              [disabled]="reopening()"
+            ></textarea>
+          </label>
+
+          @if (reopenError()) {
+            <p class="cash-error">
+              {{ reopenError() }}
+            </p>
+          }
+
+          <button
+            type="button"
+            class="btn reopen-cash-button"
+            (click)="reopenCashSession()"
+            [disabled]="reopening()"
+          >
+            {{
+              reopening()
+                ? 'Reabriendo...'
+                : 'Reabrir caja'
+            }}
+          </button>
 
         </article>
 
